@@ -100,95 +100,93 @@ val AppTypography = Typography(
 )
 
 /**
- * Apple Human Interface Guidelines (HIG) 标准排版比例与字距定义。
- * 遵循 iOS 原生 San Francisco (SF Pro) 的视觉字重阶梯与负向字距（Tight Tracking）：
- * - 大标题采用紧凑负字距，增强视觉凝聚力；
- * - 小标签与正文保持适度行距与阅读清晰度。
+ * 参考 Apple HIG 的语义字号和行高，使用 Android 系统 SansSerif。
+ * 系统字体与中文不继承 SF Pro 的字距参数；默认零字距，字号跟随用户缩放。
  */
 object AppleTypography {
     val LargeTitle = androidx.compose.ui.text.TextStyle(
         fontFamily = AppSans,
-        fontSize = 34.sp,
-        lineHeight = 41.sp,
-        fontWeight = FontWeight.Bold,
-        letterSpacing = (-0.4).sp,
+        fontSize = 26.sp,
+        lineHeight = 32.sp,
+        fontWeight = FontWeight.SemiBold,
+        letterSpacing = 0.sp,
     )
     val Title1 = androidx.compose.ui.text.TextStyle(
         fontFamily = AppSans,
-        fontSize = 28.sp,
-        lineHeight = 34.sp,
+        fontSize = 24.sp,
+        lineHeight = 30.sp,
         fontWeight = FontWeight.Bold,
-        letterSpacing = (-0.3).sp,
+        letterSpacing = 0.sp,
     )
     val Title2 = androidx.compose.ui.text.TextStyle(
         fontFamily = AppSans,
-        fontSize = 22.sp,
-        lineHeight = 28.sp,
+        fontSize = 20.sp,
+        lineHeight = 26.sp,
         fontWeight = FontWeight.Bold,
-        letterSpacing = (-0.2).sp,
+        letterSpacing = 0.sp,
     )
     val Title3 = androidx.compose.ui.text.TextStyle(
         fontFamily = AppSans,
-        fontSize = 20.sp,
-        lineHeight = 25.sp,
+        fontSize = 18.sp,
+        lineHeight = 24.sp,
         fontWeight = FontWeight.SemiBold,
-        letterSpacing = (-0.1).sp,
+        letterSpacing = 0.sp,
     )
     val Headline = androidx.compose.ui.text.TextStyle(
         fontFamily = AppSans,
-        fontSize = 17.sp,
-        lineHeight = 22.sp,
+        fontSize = 15.sp,
+        lineHeight = 20.sp,
         fontWeight = FontWeight.SemiBold,
-        letterSpacing = (-0.4).sp,
+        letterSpacing = 0.sp,
     )
     val Body = androidx.compose.ui.text.TextStyle(
         fontFamily = AppSans,
-        fontSize = 17.sp,
-        lineHeight = 22.sp,
+        fontSize = 15.sp,
+        lineHeight = 21.sp,
         fontWeight = FontWeight.Normal,
-        letterSpacing = (-0.4).sp,
+        letterSpacing = 0.sp,
     )
     val Callout = androidx.compose.ui.text.TextStyle(
         fontFamily = AppSans,
-        fontSize = 16.sp,
-        lineHeight = 21.sp,
+        fontSize = 14.sp,
+        lineHeight = 20.sp,
         fontWeight = FontWeight.Normal,
-        letterSpacing = (-0.3).sp,
+        letterSpacing = 0.sp,
     )
     val Subhead = androidx.compose.ui.text.TextStyle(
         fontFamily = AppSans,
-        fontSize = 15.sp,
-        lineHeight = 20.sp,
+        fontSize = 14.sp,
+        lineHeight = 19.sp,
         fontWeight = FontWeight.Normal,
-        letterSpacing = (-0.2).sp,
+        letterSpacing = 0.sp,
     )
     val Footnote = androidx.compose.ui.text.TextStyle(
-        fontFamily = AppSans,
-        fontSize = 13.sp,
-        lineHeight = 18.sp,
-        fontWeight = FontWeight.Normal,
-        letterSpacing = (-0.1).sp,
-    )
-    val Caption1 = androidx.compose.ui.text.TextStyle(
         fontFamily = AppSans,
         fontSize = 12.sp,
         lineHeight = 16.sp,
         fontWeight = FontWeight.Normal,
         letterSpacing = 0.sp,
     )
-    val Caption2 = androidx.compose.ui.text.TextStyle(
+    val Caption1 = androidx.compose.ui.text.TextStyle(
         fontFamily = AppSans,
         fontSize = 11.sp,
+        lineHeight = 15.sp,
+        fontWeight = FontWeight.Normal,
+        letterSpacing = 0.sp,
+    )
+    val Caption2 = androidx.compose.ui.text.TextStyle(
+        fontFamily = AppSans,
+        fontSize = 10.sp,
         lineHeight = 13.sp,
         fontWeight = FontWeight.Normal,
         letterSpacing = 0.sp,
     )
     val Button = androidx.compose.ui.text.TextStyle(
         fontFamily = AppSans,
-        fontSize = 16.sp,
-        lineHeight = 21.sp,
+        fontSize = 14.sp,
+        lineHeight = 19.sp,
         fontWeight = FontWeight.SemiBold,
-        letterSpacing = (-0.2).sp,
+        letterSpacing = 0.sp,
     )
 }
 

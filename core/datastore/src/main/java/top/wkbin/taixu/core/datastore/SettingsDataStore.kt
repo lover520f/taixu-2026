@@ -992,6 +992,7 @@ class SettingsDataStore(
         return normalized
     }
 
+    internal val appearanceStore get() = context.settingsDataStore
     companion object {
         private const val PROTECTED_VALUE_PREFIX = "enc:v1:"
         const val DEFAULT_MAX_CONCURRENT_AGENT_TURNS = 2

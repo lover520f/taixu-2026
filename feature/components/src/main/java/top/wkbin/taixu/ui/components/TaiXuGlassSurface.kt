@@ -2,7 +2,6 @@ package top.wkbin.taixu.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,22 +18,18 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.compositeOver
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
+import top.wkbin.taixu.ui.theme.ThemeStyle
+import top.wkbin.taixu.ui.theme.LocalThemeStyle
 import top.wkbin.taixu.ui.theme.LocalLiquidGlassSurfaceBackdrop
 import top.wkbin.taixu.ui.components.GlassEffects.liquidGlassSurface
 
-/**
- * 太墟高拟真毛玻璃面板 (TaiXu Glass Surface)
- *
- * 1. 深度对齐 Apple HIG Materials 与 Kyant Backdrop 规范：当处于澄明（液态玻璃）主题时，
- *    自动接入 [LocalLiquidGlassSurfaceBackdrop] 渲染真实光学折射与焦散景深；
- * 2. 顶部独占 1px 镜面受光渐变高光 (Specular Highlight)，还原 Apple 玻璃边缘受光特质；
- * 3. 支持胶囊拼接 (omitTopBorder)，当面板紧贴上方组件时省略顶边与高光，杜绝接缝处双重亮线；
- * 4. 非玻璃主题或底层 Backdrop 缺失时，平滑降级为经典细腻微渐变面板。
- */
+/** Ordinary Chengming content uses an opaque panel; navigation chrome may opt into glass. */
 @Composable
 fun TaiXuGlassPanel(
     modifier: Modifier = Modifier,
@@ -46,7 +41,12 @@ fun TaiXuGlassPanel(
     borderWidth: Dp = 1.dp,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val isDark = forceDark || isSystemInDarkTheme()
+    val isDark = forceDark || MaterialTheme.colorScheme.onSurface.luminance() > 0.5f
+    if (LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS && !LocalCupertinoChrome.current) {
+        Box(modifier.clip(shape).background((surfaceColor ?: MaterialTheme.colorScheme.surface)
+            .compositeOver(MaterialTheme.colorScheme.surface)), content = content)
+        return
+    }
     val glassBackdrop = LocalLiquidGlassSurfaceBackdrop.current
 
     val topTint = if (isDark) {

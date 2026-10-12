@@ -87,6 +87,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
@@ -116,6 +117,12 @@ import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.InnerShadow
 import com.kyant.backdrop.shadow.Shadow
 import top.wkbin.taixu.ui.components.GlassEffects.liquidGlassSurface
+import top.wkbin.taixu.feature.components.R
+import androidx.compose.ui.res.stringResource
+import top.wkbin.taixu.ui.theme.LocalThemeStyle
+import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.material3.ButtonDefaults
+import top.wkbin.taixu.ui.theme.ThemeStyle
 import top.wkbin.taixu.ui.theme.LocalLiquidGlassSurfaceBackdrop
 import kotlin.math.abs
 
@@ -126,15 +133,7 @@ val CapsuleShape: Shape = RoundedCornerShape(percent = 50)
 // 1. RuntimeSegmentedControl（iOS 药丸分段选择器）
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * 太墟 · iOS 规范液态玻璃分段选择器 (Segmented Control)。
- *
- * 遵循 Apple HIG Materials 与 Kyant Backdrop 铁律：
- * - 底轨：UltraThin 材质，带有 1px 细微高光边缘与柔和折射；
- * - 拇指指示器：Thin 双重折射材质，借助 rememberCombinedBackdrop(backdrop, trackBackdrop)
- *   同步折射底轨与底层流光，在切换时呈现真实的色散 (chromaticAberration) 与弹性动力学；
- * - 玄同（Material You）主题下自适应降级为原生 M3 药丸指示分段控制。
- */
+/** Theme-aware Runtime adapter with Cupertino content and explicit navigation glass. */
 @Composable
 fun <T> RuntimeSegmentedControl(
     items: List<T>,
@@ -144,107 +143,52 @@ fun <T> RuntimeSegmentedControl(
     enabled: Boolean = true,
     itemContent: @Composable (item: T, isSelected: Boolean) -> Unit,
 ) {
+    if (LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS) {
+        ChengmingSegmentedControl(items, selectedIndex, onSelect, modifier, enabled, itemContent)
+        return
+    }
+
     if (items.isEmpty()) return
 
-    val backdrop = LocalLiquidGlassSurfaceBackdrop.current
     val haptic = LocalHapticFeedback.current
 
-    if (backdrop != null) {
-        val isDark = MaterialTheme.colorScheme.onSurface.luminance() > 0.5f
-        val trackBackdrop = rememberLayerBackdrop()
-
+    // 玄同主题：原生 Material 3 药丸分段条降级
+    Surface(
+        modifier = modifier
+            .clip(CapsuleShape)
+            .height(38.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest,
+        shape = CapsuleShape,
+    ) {
         BoxWithConstraints(
-            modifier = modifier
-                .clip(CapsuleShape)
-                .liquidGlassSurface(
-                    backdrop = backdrop,
-                    shape = { CapsuleShape },
-                    level = LiquidGlassLevel.UltraThin,
-                    onDrawSurface = {
-                        drawRect(
-                            if (isDark) Color(0xFF141414).copy(alpha = 0.35f)
-                            else Color(0xFFF5F5F7).copy(alpha = 0.50f)
-                        )
-                    },
-                )
-                // 顶部 1px 细微镜面受光天顶线
-                .drawWithContent {
-                    drawContent()
-                    drawLine(
-                        brush = Brush.horizontalGradient(
-                            listOf(
-                                Color.Transparent,
-                                Color.White.copy(alpha = if (isDark) 0.25f else 0.55f),
-                                Color.Transparent,
-                            ),
-                        ),
-                        start = Offset(16.dp.toPx(), 0.5f),
-                        end = Offset(size.width - 16.dp.toPx(), 0.5f),
-                        strokeWidth = 1.dp.toPx(),
-                    )
-                }
+            modifier = Modifier
                 .padding(3.dp)
-                .height(38.dp),
+                .fillMaxWidth(),
             contentAlignment = Alignment.CenterStart,
         ) {
             val totalWidth = constraints.maxWidth.toFloat()
             val segmentWidth = totalWidth / items.size
             val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
 
-            // 弹性动力学滑块位置插值
             val animatedIndex by animateFloatAsState(
                 targetValue = selectedIndex.toFloat().coerceIn(0f, (items.size - 1).toFloat()),
                 animationSpec = LiquidSpringSpec,
-                label = "SegmentedThumbOffset",
+                label = "M3SegmentedOffset",
             )
 
-            // 1. 底轨内容捕获层（供滑块透镜叠加折射）
-            Box(
-                Modifier
-                    .layerBackdrop(trackBackdrop)
-                    .fillMaxWidth()
-                    .height(32.dp),
-            )
-
-            // 2. 悬浮液态玻璃滑块拇指 (Sliding Glass Thumb)
-            val thumbOffset = animatedIndex * segmentWidth
-            Box(
-                Modifier
+            // M3 实体滑块
+            Surface(
+                modifier = Modifier
                     .graphicsLayer {
-                        translationX = if (isLtr) thumbOffset else -thumbOffset
+                        translationX = if (isLtr) animatedIndex * segmentWidth else -animatedIndex * segmentWidth
                     }
-                    .drawBackdrop(
-                        backdrop = rememberCombinedBackdrop(backdrop, trackBackdrop),
-                        shape = { CapsuleShape },
-                        effects = {
-                            blur(4.dp.toPx())
-                            lens(
-                                refractionHeight = 8.dp.toPx(),
-                                refractionAmount = 14.dp.toPx(),
-                                chromaticAberration = true,
-                            )
-                        },
-                        highlight = { Highlight.Default.copy(alpha = 0.40f) },
-                        shadow = { Shadow(radius = 4.dp, alpha = 0.12f) },
-                        innerShadow = { InnerShadow(radius = 2.dp, alpha = 0.08f) },
-                        layerBlock = {
-                            // 运动过程中的动态微拉伸 (Squash & Stretch)
-                            val diff = abs(animatedIndex - selectedIndex)
-                            scaleX = 1f + (diff * 0.12f).fastCoerceIn(0f, 0.18f)
-                            scaleY = 1f - (diff * 0.06f).fastCoerceIn(0f, 0.10f)
-                        },
-                        onDrawSurface = {
-                            drawRect(
-                                if (isDark) Color.White.copy(alpha = 0.16f)
-                                else Color.White.copy(alpha = 0.85f),
-                            )
-                        },
-                    )
                     .width(with(LocalDensity.current) { segmentWidth.toDp() })
                     .height(32.dp),
-            )
+                shape = CapsuleShape,
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 1.dp,
+            ) {}
 
-            // 3. 点击响应层与文字标签
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -275,76 +219,8 @@ fun <T> RuntimeSegmentedControl(
                 }
             }
         }
-    } else {
-        // 玄同主题：原生 Material 3 药丸分段条降级
-        Surface(
-            modifier = modifier
-                .clip(CapsuleShape)
-                .height(38.dp),
-            color = MaterialTheme.colorScheme.surfaceContainerHighest,
-            shape = CapsuleShape,
-        ) {
-            BoxWithConstraints(
-                modifier = Modifier
-                    .padding(3.dp)
-                    .fillMaxWidth(),
-                contentAlignment = Alignment.CenterStart,
-            ) {
-                val totalWidth = constraints.maxWidth.toFloat()
-                val segmentWidth = totalWidth / items.size
-                val isLtr = LocalLayoutDirection.current == LayoutDirection.Ltr
-
-                val animatedIndex by animateFloatAsState(
-                    targetValue = selectedIndex.toFloat().coerceIn(0f, (items.size - 1).toFloat()),
-                    animationSpec = LiquidSpringSpec,
-                    label = "M3SegmentedOffset",
-                )
-
-                // M3 实体滑块
-                Surface(
-                    modifier = Modifier
-                        .graphicsLayer {
-                            translationX = if (isLtr) animatedIndex * segmentWidth else -animatedIndex * segmentWidth
-                        }
-                        .width(with(LocalDensity.current) { segmentWidth.toDp() })
-                        .height(32.dp),
-                    shape = CapsuleShape,
-                    color = MaterialTheme.colorScheme.surface,
-                    shadowElevation = 1.dp,
-                ) {}
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(32.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    items.forEachIndexed { index, item ->
-                        val isSelected = index == selectedIndex
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(CapsuleShape)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                    enabled = enabled,
-                                    role = Role.Tab,
-                                ) {
-                                    if (index != selectedIndex) {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        onSelect(index)
-                                    }
-                                },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            itemContent(item, isSelected)
-                        }
-                    }
-                }
-            }
-        }
     }
+
 }
 
 /**
@@ -381,19 +257,10 @@ fun RuntimeSegmentedControl(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 2. RuntimeOutlinedTextField & RuntimeTextField（iOS 内嵌凹陷折射文本框）
+// 2. RuntimeOutlinedTextField & RuntimeTextField（Cupertino 文本输入）
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * 太墟 · iOS 规范液态玻璃内嵌文本输入框 (RuntimeOutlinedTextField)。
- *
- * 在澄明主题下：
- * - 采用 UltraThin 材质渲染内嵌折射玻璃，内嵌 2dp 柔和内阴影 (InnerShadow) 形成微微凹陷质感；
- * - 边框为 1px 超细镜面反射线，获得焦点时平滑过渡到品牌高光强调色与流体外发光；
- * - 嵌套于卡片、弹窗或抽屉中时，安全消费 LocalLiquidGlassSurfaceBackdrop，避免过度折射；
- * 在玄同主题下：
- * - 100% 降级为原生 androidx.compose.material3.OutlinedTextField。
- */
+/** Theme-aware Runtime adapter with Cupertino content and explicit navigation glass. */
 @Composable
 fun RuntimeOutlinedTextField(
     value: String,
@@ -420,192 +287,13 @@ fun RuntimeOutlinedTextField(
     shape: Shape = RoundedCornerShape(14.dp),
     colors: TextFieldColors = OutlinedTextFieldDefaults.colors(),
 ) {
-    val backdrop = LocalLiquidGlassSurfaceBackdrop.current
-    val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-
-    if (backdrop == null) {
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            modifier = modifier,
-            enabled = enabled,
-            readOnly = readOnly,
-            textStyle = textStyle,
-            label = label,
-            placeholder = placeholder,
-            leadingIcon = leadingIcon,
-            trailingIcon = trailingIcon,
-            prefix = prefix,
-            suffix = suffix,
-            supportingText = supportingText,
-            isError = isError,
-            visualTransformation = visualTransformation,
-            keyboardOptions = keyboardOptions,
-            keyboardActions = keyboardActions,
-            singleLine = singleLine,
-            maxLines = maxLines,
-            minLines = minLines,
-            interactionSource = actualInteractionSource,
-            shape = shape,
-            colors = colors,
-        )
-        return
-    }
-
-    val isDark = MaterialTheme.colorScheme.onSurface.luminance() > 0.5f
-    val isFocused by actualInteractionSource.collectIsFocusedAsState()
-
-    val accentColor = if (isError) {
-        MaterialTheme.colorScheme.error
-    } else {
-        MaterialTheme.colorScheme.primary
-    }
-
-    val unfocusedBorderColor = if (isDark) {
-        Color.White.copy(alpha = 0.12f)
-    } else {
-        Color.Black.copy(alpha = 0.10f)
-    }
-
-    val currentBorderColor = if (isFocused) accentColor else unfocusedBorderColor
-    val borderWidth = if (isFocused) 1.5.dp else 1.dp
-
-    Column(modifier = modifier) {
-        // 可选顶部标签
-        if (label != null) {
-            Box(
-                Modifier
-                    .padding(start = 4.dp, bottom = 4.dp)
-                    .graphicsLayer {
-                        alpha = if (isFocused) 1f else 0.75f
-                    },
-            ) {
-                CompositionLocalProvider(
-                    LocalContentColor provides if (isFocused) accentColor else MaterialTheme.colorScheme.onSurfaceVariant,
-                    LocalTextStyle provides MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
-                ) {
-                    label()
-                }
-            }
-        }
-
-        // 输入框玻璃主体
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(shape)
-                .liquidGlassSurface(
-                    backdrop = backdrop,
-                    shape = { shape },
-                    level = LiquidGlassLevel.UltraThin,
-                    onDrawSurface = {
-                        drawRect(
-                            if (isDark) Color(0xFF181818).copy(alpha = 0.38f)
-                            else Color(0xFFF2F2F7).copy(alpha = 0.50f),
-                        )
-                    },
-                )
-                .border(borderWidth, currentBorderColor, shape)
-                // 顶部 1px 细微内沿高光
-                .drawWithContent {
-                    drawContent()
-                    drawLine(
-                        brush = Brush.horizontalGradient(
-                            listOf(
-                                Color.Transparent,
-                                Color.White.copy(alpha = if (isDark) 0.25f else 0.60f),
-                                Color.Transparent,
-                            ),
-                        ),
-                        start = Offset(12.dp.toPx(), 1.dp.toPx()),
-                        end = Offset(size.width - 12.dp.toPx(), 1.dp.toPx()),
-                        strokeWidth = 1.dp.toPx(),
-                    )
-                }
-                .padding(horizontal = 14.dp, vertical = 12.dp),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (leadingIcon != null) {
-                    CompositionLocalProvider(
-                        LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-                    ) {
-                        leadingIcon()
-                    }
-                    Spacer(Modifier.width(8.dp))
-                }
-
-                if (prefix != null) {
-                    prefix()
-                    Spacer(Modifier.width(4.dp))
-                }
-
-                Box(
-                    modifier = Modifier.weight(1f),
-                    contentAlignment = Alignment.CenterStart,
-                ) {
-                    // 占位符 (Placeholder)
-                    if (value.isEmpty() && placeholder != null) {
-                        CompositionLocalProvider(
-                            LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
-                            LocalTextStyle provides textStyle,
-                        ) {
-                            placeholder()
-                        }
-                    }
-
-                    // 原生文本编辑引擎
-                    BasicTextField(
-                        value = value,
-                        onValueChange = onValueChange,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = enabled,
-                        readOnly = readOnly,
-                        textStyle = textStyle.copy(
-                            color = MaterialTheme.colorScheme.onSurface,
-                        ),
-                        visualTransformation = visualTransformation,
-                        keyboardOptions = keyboardOptions,
-                        keyboardActions = keyboardActions,
-                        singleLine = singleLine,
-                        maxLines = maxLines,
-                        minLines = minLines,
-                        interactionSource = actualInteractionSource,
-                        cursorBrush = SolidColor(accentColor),
-                    )
-                }
-
-                if (suffix != null) {
-                    Spacer(Modifier.width(4.dp))
-                    suffix()
-                }
-
-                if (trailingIcon != null) {
-                    Spacer(Modifier.width(8.dp))
-                    CompositionLocalProvider(
-                        LocalContentColor provides MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
-                    ) {
-                        trailingIcon()
-                    }
-                }
-            }
-        }
-
-        // 底部辅助/错误文本
-        if (supportingText != null) {
-            Box(Modifier.padding(start = 4.dp, top = 4.dp)) {
-                CompositionLocalProvider(
-                    LocalContentColor provides if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
-                    LocalTextStyle provides MaterialTheme.typography.bodySmall,
-                ) {
-                    supportingText()
-                }
-            }
-        }
-    }
+    if (LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS) {
+        ChengmingTextField(value, onValueChange, modifier, enabled, readOnly, textStyle, label, placeholder,
+            leadingIcon, trailingIcon, prefix, suffix, supportingText, isError, visualTransformation,
+            keyboardOptions, keyboardActions, singleLine, maxLines, minLines, interactionSource, shape, colors)
+    } else OutlinedTextField(value, onValueChange, modifier, enabled, readOnly, textStyle, label, placeholder,
+        leadingIcon, trailingIcon, prefix, suffix, supportingText, isError, visualTransformation,
+        keyboardOptions, keyboardActions, singleLine, maxLines, minLines, interactionSource, shape, colors)
 }
 
 /**
@@ -665,18 +353,10 @@ fun RuntimeTextField(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 3. RuntimeModalBottomSheet（iOS 浮动玻璃半屏抽屉）
+// 3. RuntimeModalBottomSheet（普通内容模态抽屉）
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * 太墟 · iOS 规范液态玻璃模态底部抽屉 (RuntimeModalBottomSheet)。
- *
- * 遵循 Glass-on-Glass 铁律与 Apple 抽屉规范：
- * - 抽屉面板采用 Thick 材质，顶端 28dp 大圆角与镜面高光；
- * - 顶部居中带有 Apple 标志性的药丸拖动手柄指示条 (Drag Handle)；
- * - 关键机制：创建专属 sheetBackdrop 并通过 LocalLiquidGlassSurfaceBackdrop 注入，
- *   使抽屉内部所有的卡片、按钮、输入框、分段器自动成为第二层受光玻璃，防止多层抓取导致崩溃。
- */
+/** Theme-aware Runtime adapter with Cupertino content and explicit navigation glass. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RuntimeModalBottomSheet(
@@ -691,148 +371,13 @@ fun RuntimeModalBottomSheet(
     dragHandle: (@Composable () -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val backdrop = LocalLiquidGlassSurfaceBackdrop.current
-
-    if (backdrop == null) {
-        ModalBottomSheet(
-            onDismissRequest = onDismissRequest,
-            modifier = modifier,
-            sheetState = sheetState,
-            shape = shape,
-            containerColor = if (containerColor != Color.Unspecified) containerColor else MaterialTheme.colorScheme.surfaceContainerLow,
-            contentColor = contentColor,
-            tonalElevation = tonalElevation,
-            scrimColor = scrimColor,
-            dragHandle = dragHandle ?: { BottomSheetDefaults.DragHandle() },
-            content = content,
-        )
-        return
-    }
-
-    val isDark = MaterialTheme.colorScheme.onSurface.luminance() > 0.5f
-    val sheetBackdrop = rememberLayerBackdrop()
-
-    var isClosing by remember { mutableStateOf(false) }
-    var dragOffsetY by remember { mutableFloatStateOf(0f) }
-
-    val enterExitAnim = remember { Animatable(1f) }
-    LaunchedEffect(isClosing) {
-        if (!isClosing) {
-            enterExitAnim.animateTo(0f, animationSpec = LiquidSpringSpec)
-        } else {
-            enterExitAnim.animateTo(1f, animationSpec = spring(dampingRatio = 0.85f, stiffness = 400f))
-            onDismissRequest()
-        }
-    }
-
-    val requestClose: () -> Unit = {
-        if (!isClosing) {
-            isClosing = true
-        }
-    }
-
-    BackHandler(enabled = true, onBack = requestClose)
-
-    val currentAlpha = (1f - enterExitAnim.value).coerceIn(0f, 1f)
-    val actualScrimColor = if (isDark) {
-        Color.Black.copy(alpha = 0.45f * currentAlpha)
-    } else {
-        Color(0xFF1E2028).copy(alpha = 0.25f * currentAlpha)
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .zIndex(150f),
-    ) {
-        // 全屏半透明遮罩背景
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(actualScrimColor)
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null,
-                    onClick = requestClose,
-                ),
-        )
-
-        // 底部折射玻璃面板
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.BottomCenter)
-                .graphicsLayer {
-                    val slideDistance = size.height.takeIf { it > 0f } ?: 800f
-                    translationY = (slideDistance * enterExitAnim.value) + dragOffsetY.coerceAtLeast(0f)
-                }
-                .pointerInput(Unit) {
-                    detectVerticalDragGestures(
-                        onDragEnd = {
-                            if (dragOffsetY > 80.dp.toPx()) {
-                                requestClose()
-                            } else {
-                                dragOffsetY = 0f
-                            }
-                        },
-                        onDragCancel = {
-                            dragOffsetY = 0f
-                        },
-                        onVerticalDrag = { change, dragAmount ->
-                            change.consume()
-                            dragOffsetY = (dragOffsetY + dragAmount).coerceAtLeast(0f)
-                        },
-                    )
-                }
-                .liquidGlassSurface(
-                    backdrop = backdrop,
-                    shape = { shape },
-                    level = LiquidGlassLevel.Thick,
-                    exportedBackdrop = sheetBackdrop,
-                    onDrawSurface = {
-                        drawRect(
-                            if (isDark) Color(0xFF101014).copy(alpha = 0.65f)
-                            else Color(0xFFFCFCFE).copy(alpha = 0.72f),
-                        )
-                    },
-                )
-                // 顶部弧线 1px 镜面反射
-                .drawWithContent {
-                    drawContent()
-                    drawLine(
-                        brush = Brush.horizontalGradient(
-                            listOf(
-                                Color.Transparent,
-                                Color.White.copy(alpha = if (isDark) 0.35f else 0.70f),
-                                Color.Transparent,
-                            ),
-                        ),
-                        start = Offset(24.dp.toPx(), 0.5f),
-                        end = Offset(size.width - 24.dp.toPx(), 0.5f),
-                        strokeWidth = 1.dp.toPx(),
-                    )
-                },
-        ) {
-            // 向内部所有子级提供安全层级 sheetBackdrop
-            CompositionLocalProvider(
-                LocalLiquidGlassSurfaceBackdrop provides sheetBackdrop,
-            ) {
-                Column(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(bottom = 24.dp),
-                ) {
-                    if (dragHandle != null) {
-                        dragHandle()
-                    } else {
-                        DefaultGlassDragHandle(isDark)
-                    }
-                    content()
-                }
-            }
-        }
-    }
+    if (LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS)
+        ChengmingBottomSheet(onDismissRequest, modifier, sheetState, shape, containerColor, contentColor,
+            tonalElevation, scrimColor, dragHandle, content)
+    else ModalBottomSheet(onDismissRequest, modifier, sheetState = sheetState, shape = shape,
+        containerColor = if (containerColor != Color.Unspecified) containerColor else MaterialTheme.colorScheme.surfaceContainerLow,
+        contentColor = contentColor, tonalElevation = tonalElevation, scrimColor = scrimColor,
+        dragHandle = dragHandle ?: { BottomSheetDefaults.DragHandle() }, content = content)
 }
 
 /** 默认 Apple 质感药丸拖拽手柄 */
@@ -857,7 +402,7 @@ private fun DefaultGlassDragHandle(isDark: Boolean) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// 4. RuntimeDropdownMenu & RuntimeDropdownMenuItem（iOS 悬浮玻璃上下文菜单）
+// 4. RuntimeDropdownMenu & RuntimeDropdownMenuItem（Cupertino 上下文菜单）
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -879,65 +424,9 @@ fun RuntimeDropdownMenu(
     shape: Shape = RoundedCornerShape(18.dp),
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    val backdrop = LocalLiquidGlassSurfaceBackdrop.current
-
-    if (backdrop == null) {
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = onDismissRequest,
-            modifier = modifier,
-            offset = offset,
-            properties = properties,
-            shape = shape,
-            content = content,
-        )
-        return
-    }
-
-    val isDark = MaterialTheme.colorScheme.onSurface.luminance() > 0.5f
-    val surfaceColor = if (isDark) Color(0xFF1E1E24).copy(alpha = 0.90f) else Color(0xFFFAFBFC).copy(alpha = 0.92f)
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.65f)
-
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismissRequest,
-        modifier = modifier
-            .shadow(elevation = 16.dp, shape = shape, spotColor = Color.Black.copy(alpha = 0.28f))
-            .clip(shape)
-            .background(surfaceColor)
-            .border(
-                width = 1.dp,
-                brush = Brush.verticalGradient(listOf(borderColor, borderColor.copy(alpha = 0.08f))),
-                shape = shape,
-            )
-            .drawWithContent {
-                drawContent()
-                drawLine(
-                    brush = Brush.horizontalGradient(
-                        listOf(
-                            Color.Transparent,
-                            borderColor,
-                            Color.Transparent,
-                        ),
-                    ),
-                    start = Offset(14.dp.toPx(), 0.5f),
-                    end = Offset(size.width - 14.dp.toPx(), 0.5f),
-                    strokeWidth = 1.dp.toPx(),
-                )
-            },
-        offset = offset,
-        properties = properties,
-        shape = shape,
-        containerColor = Color.Transparent,
-        tonalElevation = 0.dp,
-        shadowElevation = 0.dp,
-    ) {
-        CompositionLocalProvider(
-            LocalLiquidGlassSurfaceBackdrop provides null,
-        ) {
-            content()
-        }
-    }
+    if (LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS)
+        ChengmingDropdownMenu(expanded, onDismissRequest, modifier, offset, properties, shape, content)
+    else DropdownMenu(expanded, onDismissRequest, modifier, offset, properties = properties, shape = shape, content = content)
 }
 
 /**
@@ -955,42 +444,18 @@ fun RuntimeDropdownMenuItem(
     contentPadding: PaddingValues = MenuDefaults.DropdownMenuItemContentPadding,
     interactionSource: MutableInteractionSource? = null,
 ) {
-    val actualInteractionSource = interactionSource ?: remember { MutableInteractionSource() }
-    val isPressed by actualInteractionSource.collectIsPressedAsState()
-    val isDark = MaterialTheme.colorScheme.onSurface.luminance() > 0.5f
-
-    DropdownMenuItem(
-        text = text,
-        onClick = onClick,
-        modifier = modifier
-            .padding(horizontal = 4.dp, vertical = 2.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(
-                if (isPressed) {
-                    if (isDark) Color.White.copy(alpha = 0.12f)
-                    else Color.Black.copy(alpha = 0.08f)
-                } else Color.Transparent,
-            ),
-        leadingIcon = leadingIcon,
-        trailingIcon = trailingIcon,
-        enabled = enabled,
-        colors = colors,
-        contentPadding = contentPadding,
-        interactionSource = actualInteractionSource,
-    )
+    val scope = LocalCupertinoMenuScope.current
+    if (LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS && scope != null)
+        ChengmingMenuItem(scope, text, onClick, modifier, leadingIcon, trailingIcon, enabled)
+    else DropdownMenuItem(text, onClick, modifier, leadingIcon, trailingIcon, enabled,
+        colors, contentPadding, interactionSource)
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 5. RuntimeSearchBar（iOS 胶囊透镜搜索栏）
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * 太墟 · iOS 规范液态玻璃胶囊搜索栏 (RuntimeSearchBar)。
- *
- * - 外观：高度 42dp，Capsule 全圆角，UltraThin 材质轻微下凹折射；
- * - 集成：左侧搜索图标，内部 BasicTextField，右侧渐入渐出的一键清空按钮；
- * - 双主题自适应：在玄同主题下无缝降级为标准圆角 Surface 搜索样式。
- */
+/** Theme-aware Runtime adapter with Cupertino content and explicit navigation glass. */
 @Composable
 fun RuntimeSearchBar(
     query: String,
@@ -1002,145 +467,24 @@ fun RuntimeSearchBar(
     onClear: (() -> Unit)? = null,
     enabled: Boolean = true,
 ) {
-    val backdrop = LocalLiquidGlassSurfaceBackdrop.current
-    val isDark = MaterialTheme.colorScheme.onSurface.luminance() > 0.5f
-    val interactionSource = remember { MutableInteractionSource() }
-    val isFocused by interactionSource.collectIsFocusedAsState()
-
-    val containerModifier = if (backdrop != null) {
-        modifier
-            .height(42.dp)
-            .clip(CapsuleShape)
-            .liquidGlassSurface(
-                backdrop = backdrop,
-                shape = { CapsuleShape },
-                level = LiquidGlassLevel.UltraThin,
-                onDrawSurface = {
-                    drawRect(
-                        if (isDark) Color(0xFF18181C).copy(alpha = 0.40f)
-                        else Color(0xFFEBEBF0).copy(alpha = 0.55f),
-                    )
-                },
-            )
-            .border(
-                width = if (isFocused) 1.5.dp else 1.dp,
-                color = if (isFocused) MaterialTheme.colorScheme.primary
-                else if (isDark) Color.White.copy(alpha = 0.12f)
-                else Color.Black.copy(alpha = 0.08f),
-                shape = CapsuleShape,
-            )
-            .drawWithContent {
-                drawContent()
-                drawLine(
-                    brush = Brush.horizontalGradient(
-                        listOf(
-                            Color.Transparent,
-                            Color.White.copy(alpha = if (isDark) 0.25f else 0.60f),
-                            Color.Transparent,
-                        ),
-                    ),
-                    start = Offset(16.dp.toPx(), 1.dp.toPx()),
-                    end = Offset(size.width - 16.dp.toPx(), 1.dp.toPx()),
-                    strokeWidth = 1.dp.toPx(),
-                )
-            }
-    } else {
-        modifier
-            .height(42.dp)
-            .clip(CapsuleShape)
-            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-            .border(
-                width = if (isFocused) 1.5.dp else 0.dp,
-                color = if (isFocused) MaterialTheme.colorScheme.primary else Color.Transparent,
-                shape = CapsuleShape,
-            )
-    }
-
-    Row(
-        modifier = containerModifier.padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        // 左侧搜索图标
-        if (leadingIcon != null) {
-            leadingIcon()
-            Spacer(Modifier.width(8.dp))
-        } else {
-            RuntimeIcon(
-                name = RuntimeIconName.Search,
-                modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.60f),
-            )
-            Spacer(Modifier.width(8.dp))
-        }
-
-        // 搜索输入主体
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            if (query.isEmpty()) {
-                Text(
-                    text = placeholder,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f),
-                )
-            }
-            BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                enabled = enabled,
-                textStyle = MaterialTheme.typography.bodyMedium.copy(
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                ),
-                keyboardOptions = KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { onSearch?.invoke(query) }),
-                interactionSource = interactionSource,
-                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            )
-        }
-
-        // 右侧一键清空按钮
-        AnimatedVisibility(
-            visible = query.isNotEmpty(),
-            enter = fadeIn(),
-            exit = fadeOut(),
-        ) {
-            Box(
-                modifier = Modifier
-                    .clip(CircleShape)
-                    .clickable(role = Role.Button) {
-                        onQueryChange("")
-                        onClear?.invoke()
-                    }
-                    .padding(4.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                RuntimeIcon(
-                    name = RuntimeIconName.Close,
-                    modifier = Modifier.size(16.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
-                )
-            }
-        }
-    }
+    RuntimeOutlinedTextField(value = query, onValueChange = onQueryChange, modifier = modifier,
+        enabled = enabled, singleLine = true, placeholder = { Text(placeholder) },
+        leadingIcon = leadingIcon ?: { RuntimeIcon(RuntimeIconName.Search, Modifier.size(20.dp)) },
+        trailingIcon = if (query.isEmpty()) null else {
+            { RuntimeIconButton(onClick = { onQueryChange(""); onClear?.invoke() }, enabled = enabled,
+                contentDescription = stringResource(R.string.components_clear_search)) {
+                RuntimeIcon(RuntimeIconName.Close, Modifier.size(18.dp))
+            } }
+        },
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { onSearch?.invoke(query) }))
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 6. RuntimeBadge（iOS 色散水滴角标）
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * 太墟 · iOS 规范液态玻璃状态/计数水滴角标 (RuntimeBadge)。
- *
- * 在澄明主题下：
- * - 采用 UltraThin 材质，微型胶囊药丸外观；
- * - 借助 BlendMode.Hue 与真实品牌强调色融合，带来通透水润的玻璃珠质感；
- * 在玄同主题下：
- * - 降级为原生 M3 Badge。
- */
+/** Theme-aware Runtime adapter with Cupertino content and explicit navigation glass. */
 @Composable
 fun RuntimeBadge(
     modifier: Modifier = Modifier,
@@ -1148,50 +492,12 @@ fun RuntimeBadge(
     contentColor: Color = MaterialTheme.colorScheme.onError,
     content: (@Composable RowScope.() -> Unit)? = null,
 ) {
-    val backdrop = LocalLiquidGlassSurfaceBackdrop.current
-
-    if (backdrop == null) {
-        Badge(
-            modifier = modifier,
-            containerColor = containerColor,
-            contentColor = contentColor,
-            content = content,
-        )
-        return
-    }
-
-    Box(
-        modifier = modifier
-            .clip(CapsuleShape)
-            .liquidGlassSurface(
-                backdrop = backdrop,
-                shape = { CapsuleShape },
-                level = LiquidGlassLevel.UltraThin,
-                onDrawSurface = {
-                    drawRect(containerColor, blendMode = BlendMode.Hue)
-                    drawRect(containerColor.copy(alpha = 0.85f))
-                },
-            )
-            .border(0.5.dp, Color.White.copy(alpha = 0.35f), CapsuleShape)
-            .padding(horizontal = 6.dp, vertical = 2.dp)
-            .heightIn(min = 16.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        if (content != null) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-            ) {
-                CompositionLocalProvider(
-                    LocalContentColor provides contentColor,
-                    LocalTextStyle provides MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp,
-                    ),
-                ) {
-                    content()
-                }
-            }
+    val fill = containerColor.copy(alpha = 1f)
+    Surface(modifier = modifier, color = fill, contentColor = contentColor, shape = CircleShape) {
+        Row(Modifier.padding(horizontal = if (content == null) 3.dp else 6.dp, vertical = 2.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            if (content != null) ProvideTextStyle(MaterialTheme.typography.labelSmall) { content() }
+            else Spacer(Modifier.size(2.dp))
         }
     }
 }
@@ -1222,89 +528,13 @@ fun RuntimeLiquidButton(
     contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 12.dp),
     content: @Composable RowScope.() -> Unit,
 ) {
-    val backdrop = LocalLiquidGlassSurfaceBackdrop.current
-
-    if (backdrop == null) {
-        androidx.compose.material3.Button(
-            onClick = onClick,
-            modifier = modifier,
-            enabled = enabled,
-            shape = shape,
-            contentPadding = contentPadding,
-            colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                containerColor = if (tint.isSpecified) tint else MaterialTheme.colorScheme.primary,
-            ),
-            content = content,
-        )
-        return
-    }
-
-    val animationScope = rememberCoroutineScope()
-    val interactiveHighlight = remember(animationScope) {
-        InteractiveHighlight(animationScope = animationScope)
-    }
-
-    Row(
-        modifier = modifier
-            .drawBackdrop(
-                backdrop = backdrop,
-                shape = { shape },
-                effects = {
-                    vibrancy()
-                    blur(2.dp.toPx())
-                    lens(12.dp.toPx(), 24.dp.toPx())
-                },
-                highlight = { Highlight.Default.copy(alpha = 0.45f) },
-                shadow = { Shadow(radius = 6.dp, alpha = 0.12f) },
-                innerShadow = { InnerShadow(radius = 3.dp, alpha = 0.08f) },
-                layerBlock = if (enabled) {
-                    {
-                        val width = size.width
-                        val height = size.height
-                        val progress = interactiveHighlight.pressProgress
-                        val scale = lerp(1f, 1f + 4.dp.toPx() / size.height, progress)
-
-                        val maxOffset = size.minDimension
-                        val initialDerivative = 0.05f
-                        val offset = interactiveHighlight.offset
-                        translationX = maxOffset * tanh(initialDerivative * offset.x / maxOffset)
-                        translationY = maxOffset * tanh(initialDerivative * offset.y / maxOffset)
-
-                        val maxDragScale = 4.dp.toPx() / size.height
-                        val offsetAngle = atan2(offset.y, offset.x)
-                        scaleX = scale + maxDragScale * abs(cos(offsetAngle) * offset.x / size.maxDimension) * (width / height).fastCoerceAtMost(1f)
-                        scaleY = scale + maxDragScale * abs(sin(offsetAngle) * offset.y / size.maxDimension) * (height / width).fastCoerceAtMost(1f)
-                    }
-                } else null,
-                onDrawSurface = {
-                    if (tint.isSpecified) {
-                        drawRect(tint, blendMode = BlendMode.Hue)
-                        drawRect(tint.copy(alpha = 0.75f))
-                    }
-                    if (surfaceColor.isSpecified) {
-                        drawRect(surfaceColor)
-                    }
-                },
-            )
-            .clickable(
-                interactionSource = null,
-                indication = null,
-                enabled = enabled,
-                role = Role.Button,
-                onClick = onClick,
-            )
-            .then(
-                if (enabled) {
-                    Modifier
-                        .then(interactiveHighlight.modifier)
-                        .then(interactiveHighlight.gestureModifier)
-                } else Modifier,
-            )
-            .padding(contentPadding),
-        horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically,
-        content = content,
-    )
+    if (LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS) {
+        val fill = if (tint.isSpecified) tint else if (surfaceColor.isSpecified) surfaceColor else MaterialTheme.colorScheme.surface
+        val foreground = if (fill.luminance() > 0.179f) Color.Black else Color.White
+        ChengmingButton(onClick, modifier, enabled, contentPadding, shape,
+            ButtonDefaults.buttonColors(containerColor = fill, contentColor = foreground), null,
+            glass = true, content = content)
+    } else RuntimeButton(onClick, modifier, enabled, shape = shape, contentPadding = contentPadding, content = content)
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

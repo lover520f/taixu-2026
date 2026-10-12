@@ -25,7 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import top.wkbin.taixu.ui.components.RuntimeIconButton as IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
+import top.wkbin.taixu.ui.components.RuntimeModalBottomSheet as ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Tab

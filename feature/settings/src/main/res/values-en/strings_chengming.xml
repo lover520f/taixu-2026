@@ -1,0 +1,9 @@
+<resources>
+    <string name="chengming_accessibility">Chengming · Readability and motion</string>
+    <string name="chengming_reduce_transparency">Reduce transparency</string>
+    <string name="chengming_reduce_transparency_description">Use solid navigation and floating controls to reduce background distraction</string>
+    <string name="chengming_increase_contrast">Increase contrast</string>
+    <string name="chengming_increase_contrast_description">Strengthen text and borders; also respects system high contrast</string>
+    <string name="chengming_reduce_motion">Reduce motion</string>
+    <string name="chengming_reduce_motion_description">Reduce elastic and decorative effects; enabled when system animations are off</string>
+</resources>

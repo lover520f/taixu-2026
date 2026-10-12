@@ -10,18 +10,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -66,7 +55,6 @@ import top.wkbin.taixu.ui.components.RuntimeIconName
 import top.wkbin.taixu.ui.components.RuntimeTopBar
 import android.content.Intent
 import android.net.Uri
-
 /**
  * 太墟 · 外观、字号与终端深度定制页面 (Appearance & Terminal Settings)
  */
@@ -186,7 +174,7 @@ fun AppearanceSettingsScreen(
                         }
                     }
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    SettingsDivider(inset = 14.dp)
 
                     // 终端字体大小
                     Column(Modifier.fillMaxWidth().padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -233,7 +221,7 @@ fun AppearanceSettingsScreen(
                         }
                     }
 
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    SettingsDivider(inset = 54.dp)
 
                     // 终端触觉震动反馈
                     ToggleRow(
@@ -269,7 +257,7 @@ fun AppearanceSettingsScreen(
                         selected = isMaterialYou,
                         onClick = { viewModel.setThemeStyle("material_you") },
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    SettingsDivider(inset = 16.dp)
                     ThemeOptionRow(
                         title = stringResource(R.string.settings_theme_liquid_glass),
                         subtitle = stringResource(R.string.settings_theme_liquid_glass_description),
@@ -278,7 +266,7 @@ fun AppearanceSettingsScreen(
                         onClick = { viewModel.setThemeStyle("liquid_glass") },
                     )
                     if (isMaterialYou) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                        SettingsDivider(inset = 54.dp)
                         ToggleRow(
                             icon = RuntimeIconName.Palette,
                             title = stringResource(R.string.settings_dynamic_color),
@@ -295,6 +283,7 @@ fun AppearanceSettingsScreen(
             }
 
             if (isLiquidGlass) {
+                item { ChengmingAccessibilitySettings() }
                 item {
                     Text(
                         text = stringResource(R.string.settings_chengming_background),
@@ -342,14 +331,14 @@ fun AppearanceSettingsScreen(
                         selected = themeMode == "system",
                         onClick = { viewModel.setThemeMode("system") },
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    SettingsDivider(inset = 16.dp)
                     ThemeOptionRow(
                         title = stringResource(R.string.settings_color_light),
                         subtitle = stringResource(R.string.settings_color_light_description),
                         selected = themeMode == "light",
                         onClick = { viewModel.setThemeMode("light") },
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    SettingsDivider(inset = 16.dp)
                     ThemeOptionRow(
                         title = stringResource(R.string.settings_color_dark),
                         subtitle = stringResource(R.string.settings_color_dark_description),
@@ -374,14 +363,14 @@ fun AppearanceSettingsScreen(
                         selected = appLanguage == "system",
                         onClick = { AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList()) },
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    SettingsDivider(inset = 16.dp)
                     ThemeOptionRow(
                         title = stringResource(R.string.settings_language_chinese),
                         subtitle = stringResource(R.string.settings_language_chinese_description),
                         selected = appLanguage == "zh",
                         onClick = { AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("zh-CN")) },
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    SettingsDivider(inset = 16.dp)
                     ThemeOptionRow(
                         title = stringResource(R.string.settings_language_english),
                         subtitle = stringResource(R.string.settings_language_english_description),
@@ -604,6 +593,7 @@ private fun ThemeOptionRow(
     onClick: () -> Unit,
     accentColor: androidx.compose.ui.graphics.Color? = null,
 ) {
+    val chengming = top.wkbin.taixu.ui.theme.LocalThemeStyle.current == top.wkbin.taixu.ui.theme.ThemeStyle.LIQUID_GLASS
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -638,10 +628,19 @@ private fun ThemeOptionRow(
                 )
             }
         }
-        RadioButton(
-            selected = selected,
-            onClick = onClick,
-            colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary),
-        )
+        if (chengming) {
+            if (selected) {
+                RuntimeIcon(RuntimeIconName.Check, Modifier.size(20.dp), MaterialTheme.colorScheme.primary)
+            } else {
+                Spacer(Modifier.size(20.dp))
+            }
+        } else {
+            RadioButton(
+                selected = selected,
+                onClick = onClick,
+                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary),
+            )
+        }
     }
 }
+

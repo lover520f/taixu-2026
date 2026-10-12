@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -32,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -47,16 +49,37 @@ import top.wkbin.taixu.ui.components.RuntimeIconName
 import top.wkbin.taixu.ui.components.RuntimeSwitch
 import top.wkbin.taixu.ui.components.RuntimeTextButton as TextButton
 import top.wkbin.taixu.runtime.webchat.WebChatServerStatus
+import top.wkbin.taixu.ui.theme.LocalThemeStyle
+import top.wkbin.taixu.ui.theme.ThemeStyle
 
 @Composable
-internal fun SettingsGroup(content: @Composable () -> Unit) {
+internal fun SettingsGroup(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val chengming = LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS
     RuntimeCard(
-        Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
+        shape = if (chengming) RoundedCornerShape(12.dp) else RoundedCornerShape(16.dp),
         containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
         contentPadding = PaddingValues(0.dp),
     ) {
         Column { content() }
     }
+}
+
+@Composable
+internal fun SettingsDivider(
+    modifier: Modifier = Modifier,
+    inset: androidx.compose.ui.unit.Dp = 54.dp,
+) {
+    val hairline = (1f / androidx.compose.ui.platform.LocalDensity.current.density).dp
+    val chengming = LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS
+    HorizontalDivider(
+        modifier = modifier.padding(start = if (chengming) inset else 0.dp),
+        thickness = if (chengming) hairline else 1.dp,
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (chengming) 0.5f else 0.4f),
+    )
 }
 
 @Composable
@@ -68,6 +91,7 @@ internal fun SettingsRow(
     onClick: (() -> Unit)? = null,
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
+    val chengming = LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS
     val rowModifier = if (onClick == null) Modifier else Modifier.clickable(onClick = onClick)
     Row(
         rowModifier
@@ -85,14 +109,16 @@ internal fun SettingsRow(
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 title,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                style = if (chengming) MaterialTheme.typography.bodyLarge
+                    else MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
+                maxLines = if (chengming) 2 else 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 subtitle,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                style = if (chengming) MaterialTheme.typography.bodySmall
+                    else MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
@@ -101,17 +127,20 @@ internal fun SettingsRow(
         value?.let {
             Surface(
                 shape = RoundedCornerShape(4.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                color = if (chengming) Color.Transparent
+                    else MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
             ) {
                 Text(
                     it,
-                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 1.5.dp),
-                    style = MaterialTheme.typography.labelSmall.copy(
+                    modifier = Modifier.then(if (chengming) Modifier.widthIn(max = 120.dp) else Modifier)
+                        .padding(horizontal = 7.dp, vertical = 1.5.dp),
+                    style = if (chengming) MaterialTheme.typography.bodySmall else MaterialTheme.typography.labelSmall.copy(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 10.sp,
                     ),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    color = if (chengming) MaterialTheme.colorScheme.onSurfaceVariant
+                        else MaterialTheme.colorScheme.onPrimaryContainer,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -133,6 +162,7 @@ internal fun ToggleRow(
     change: (Boolean) -> Unit,
     enabled: Boolean = true,
 ) {
+    val chengming = LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS
     Row(
         Modifier
             .fillMaxWidth()
@@ -149,14 +179,16 @@ internal fun ToggleRow(
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(
                 title,
-                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                style = if (chengming) MaterialTheme.typography.bodyLarge
+                    else MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
+                maxLines = if (chengming) 2 else 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
                 subtitle,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                style = if (chengming) MaterialTheme.typography.bodySmall
+                    else MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,

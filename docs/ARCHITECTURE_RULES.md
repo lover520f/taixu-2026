@@ -22,21 +22,24 @@
 ## 3. 🎨 M3 Expressive 与 UX/UI 设计系统与前端架构铁律
 
 1. **统一设计系统组件（严禁 raw Material 组件散落）**：
-   - 容器必须使用 `top.wkbin.taixu.ui.components.RuntimeCard`（支持 `containerColor`, `borderColor`, `contentPadding`, `onClick`），**严禁**使用原生 `androidx.compose.material3.Card` 或自定义 `Modifier.border/background` 拼接容器，确保在**Material You（标准 M3）**与**液态玻璃**双主题下毛玻璃、折射与微边框自适应生效。
+   - 容器必须使用 `top.wkbin.taixu.ui.components.RuntimeCard`（支持 `containerColor`, `borderColor`, `contentPadding`, `onClick`, `material`），**严禁**在业务页面使用原生 `androidx.compose.material3.Card` 或自定义 `Modifier.border/background` 拼接容器。玄同沿用 M3；澄明默认 `RuntimeSurfaceMaterial.Content`，使用不透明的 Cupertino 内容表面。仅悬浮导航/操作容器可以显式选择 `RuntimeSurfaceMaterial.Glass`，**禁止因切换到澄明而将普通卡片、列表、正文全局玻璃化**。
    - 按钮统一使用 `RuntimeButton`, `RuntimeFilledTonalButton`, `RuntimeOutlinedButton`, `RuntimeTextButton`, `RuntimeIconButton`。
    - 弹窗统一使用 `top.wkbin.taixu.ui.components.RuntimeAlertDialog`。
    - 开关与进度指示使用 `RuntimeSwitch`, `RuntimeLinearProgressIndicator`, `RuntimeCircularProgressIndicator`。
+   - 输入、菜单、抽屉与选择控件使用相应 `Runtime*` 入口；澄明由 compose-cupertino 提供基础实现，业务层不直接依赖库类型。
 2. **弹窗与表单软键盘安全（IME 防遮挡）**：
    - 所有包含 `OutlinedTextField` 或列表的 Dialog `text` 内容区域，**严禁**设置死锁的固定高宽或外层硬编码 `offset`，**必须**包裹 `modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())`，确保在移动端软键盘弹起时表单可顺畅滑动，操作按钮始终可见可达。
 3. **顶部与底部导航栏规范**：
-   - 顶部导航统一使用 `RuntimeTopBar`（支持 `title`, `statusText`, `onBack`）。
-   - 底部导航统一使用基于 M3 原生 NavigationBar 的 `RuntimeBottomBar`。
+   - 顶部导航统一使用 `RuntimeTopBar`（支持 `title`, `statusText`, `onBack`）。玻璃用于导航与操作层，标题/正文保持清晰。
+   - 底部导航统一使用 `RuntimeBottomBar`：玄同为 M3 NavigationBar，澄明为悬浮玻璃导航。
+   - 主题身份读取 `LocalThemeStyle`；Backdrop 是否存在只表示效果取样源是否可用，**不得用它推断基础组件风格**。设置等内容目录优先使用 `RuntimeGroupedList` 的共享表面和内缩分隔线，图标块 `IconTile` 属于普通内容，不使用折射。
 4. **响应式与小屏防截断/防折行**：
    - 消息气泡（如 `UserBubble`）必须采用响应式宽度（`Modifier.widthIn(max = 560.dp)`），避免在平板/折叠屏/大屏上被限制过窄。
    - 单行文本、路径或标签（如文件路径、短语标题、状态标签）必须显式声明 `maxLines = 1, overflow = TextOverflow.Ellipsis`，严禁长字符串将同行的操作按钮挤出屏幕。
    - 横向多按钮行（如操作栏、卡片底部动作）必须配置适当紧凑的 `contentPadding` 与 `labelSmall` 单行字号，杜绝 360dp 窄屏宽度下文字断行造成按钮高度参差不齐。
 5. **层级与多层材质防冲突**：
-   - 在 `RuntimeCard` 内嵌的日志区、终端代码块或次级子项中，应使用 `Surface(color = MaterialTheme.colorScheme.surfaceContainerLowest/Highest)`，避免多层嵌套 Card 导致液态玻璃与阴影层级计算异常。
+   - 在 `RuntimeCard` 内嵌的日志区、终端代码块或次级子项中，应使用 `Surface(color = MaterialTheme.colorScheme.surfaceContainerLowest/Highest)`。禁止玻璃叠玻璃；澄明的页面底、内容底与色调容器均为不透明语义色，玻璃透明度在导航/操作组件内部单独控制。
+   - 澄明样板、材质边界与验收矩阵见 [`CHENGMING_DESIGN.md`](CHENGMING_DESIGN.md)。
 
 ---
 

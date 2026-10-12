@@ -1,5 +1,4 @@
 package top.wkbin.taixu.ui.chat
-
 import org.koin.compose.viewmodel.koinViewModel
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
@@ -85,7 +84,8 @@ import top.wkbin.taixu.runtime.WorkspaceProject
 import top.wkbin.taixu.ui.components.MainDestination
 import top.wkbin.taixu.ui.components.RuntimeBottomBar
 import top.wkbin.taixu.ui.components.liquidGlassContent
-import top.wkbin.taixu.ui.theme.LocalLiquidGlassBackdrop
+import top.wkbin.taixu.ui.theme.LocalThemeStyle
+import top.wkbin.taixu.ui.theme.ThemeStyle
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.lazy.LazyListState
@@ -663,7 +663,7 @@ fun ChatScreen(
                 }
             }
 
-            if (LocalLiquidGlassBackdrop.current == null) {
+            if (LocalThemeStyle.current != ThemeStyle.LIQUID_GLASS) {
                 Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth()) {
                     RuntimeBottomBar(MainDestination.Agent, onNavigate)
                 }

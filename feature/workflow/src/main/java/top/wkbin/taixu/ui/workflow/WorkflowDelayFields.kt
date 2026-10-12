@@ -2,7 +2,7 @@ package top.wkbin.taixu.ui.workflow
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.OutlinedTextField
+import top.wkbin.taixu.ui.components.RuntimeOutlinedTextField as OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier

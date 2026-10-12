@@ -11,6 +11,7 @@ import org.koin.dsl.koinApplication
 import org.koin.test.verify.verify
 import org.koin.test.verify.definition
 import org.koin.test.verify.injectedParameters
+import top.wkbin.taixu.iteration.engine.TaiXuDevBuildCoordinator
 import java.io.File
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
@@ -41,6 +42,7 @@ class TaiXuModulesTest {
             // These arguments are assembled explicitly by provider lambdas, not container lookups.
             injections = injectedParameters(
                 definition<WorkspaceFileAccess>(File::class),
+                definition<TaiXuDevBuildCoordinator>(TaiXuDevBuildCoordinator.ShellRunner::class),
                 definition<WorkspaceToolBackend>(Function1::class),
                 definition<CapabilityToolGateway>(Function5::class),
                 definition<ToolCheckpoints<*, *>>(List::class),

@@ -22,11 +22,11 @@
     <string name="settings_theme_material_you">Material You</string>
     <string name="settings_theme_material_you_description">Google Native Material 3 design system with dynamic wallpaper theming and obsidian palette</string>
     <string name="settings_theme_liquid_glass">Liquid Glass</string>
-    <string name="settings_theme_liquid_glass_description">Backdrop blur refraction + flowing Aurora with translucent glassy textures</string>
+    <string name="settings_theme_liquid_glass_description">Clear Cupertino content surfaces with Liquid Glass navigation and controls</string>
     <string name="settings_theme_xuantong">Material You</string>
     <string name="settings_theme_xuantong_description">Google Native Material 3 design system with dynamic wallpaper theming and obsidian palette</string>
     <string name="settings_theme_chengming">Liquid Glass</string>
-    <string name="settings_theme_chengming_description">Backdrop blur refraction + flowing Aurora with translucent glassy textures</string>
+    <string name="settings_theme_chengming_description">Clear Cupertino content surfaces with Liquid Glass navigation and controls</string>
     <string name="settings_dynamic_color">Dynamic Color</string>
     <string name="settings_dynamic_color_description">Harmonize app palette with system wallpaper colors (Monet engine)</string>
     <string name="settings_dynamic_color_unsupported">Requires Android 12 (API 31) or above</string>

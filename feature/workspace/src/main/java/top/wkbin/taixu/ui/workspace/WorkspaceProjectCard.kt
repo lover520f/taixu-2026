@@ -1,5 +1,4 @@
 package top.wkbin.taixu.ui.workspace
-
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,8 +9,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import top.wkbin.taixu.ui.components.RuntimeDropdownMenu as DropdownMenu
+import top.wkbin.taixu.ui.components.RuntimeDropdownMenuItem as DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import top.wkbin.taixu.feature.workspace.R
 import top.wkbin.taixu.runtime.ProjectType
 import top.wkbin.taixu.runtime.WorkspaceProject
+import top.wkbin.taixu.ui.components.isLiquidGlassThemeActive
 import top.wkbin.taixu.ui.components.IconTile
 import top.wkbin.taixu.ui.components.RuntimeCard
 import top.wkbin.taixu.ui.components.RuntimeCircularProgressIndicator
@@ -43,7 +43,6 @@ import top.wkbin.taixu.ui.components.RuntimeIcon
 import top.wkbin.taixu.ui.components.RuntimeIconName
 import top.wkbin.taixu.ui.components.RuntimeLinearProgressIndicator as LinearProgressIndicator
 import top.wkbin.taixu.ui.components.RuntimeTextButton as TextButton
-
 /** 工坊项目卡片：类型徽章 + 路径/体积 + 快捷操作栏。 */
 @Composable
 internal fun ProjectCard(
@@ -81,6 +80,7 @@ internal fun ProjectCard(
         // 减法：常态无边框，仅构建中保留主色描边作为状态提示
         borderColor = if (isBuilding) MaterialTheme.colorScheme.primary else Color.Transparent,
         onClick = onOpenExplorer,
+        contentPadding = PaddingValues(if (isLiquidGlassThemeActive()) 12.dp else 16.dp),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(
@@ -88,7 +88,7 @@ internal fun ProjectCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
-                IconTile(typeIcon, size = 40.dp, color = typeBadgeColor)
+                IconTile(typeIcon, size = if (isLiquidGlassThemeActive()) 32.dp else 40.dp, color = typeBadgeColor)
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp),

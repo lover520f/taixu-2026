@@ -22,7 +22,7 @@ import androidx.compose.material3.HorizontalDivider
 import top.wkbin.taixu.ui.components.RuntimeLinearProgressIndicator as LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import top.wkbin.taixu.ui.components.RuntimeOutlinedButton as OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import top.wkbin.taixu.ui.components.RuntimeOutlinedTextField as OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import top.wkbin.taixu.ui.components.RuntimeSwitch as Switch

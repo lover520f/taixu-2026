@@ -29,7 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import top.wkbin.taixu.ui.components.RuntimeOutlinedTextField as OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -362,7 +362,7 @@ private fun DaemonServiceCard(
             )
 
             Spacer(modifier = Modifier.height(10.dp))
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f))
+            SettingsDivider(inset = 0.dp)
             Spacer(modifier = Modifier.height(10.dp))
 
             // Web 控制台凭据区域（完全扁平化，去除卡片套卡片）
@@ -700,7 +700,7 @@ private fun AgentCard(
 
         // 2. 扁平精简信息区（彻底剔除卡片套卡片）
         Spacer(modifier = Modifier.height(6.dp))
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f))
+        SettingsDivider(inset = 0.dp)
         Spacer(modifier = Modifier.height(6.dp))
 
         Row(
@@ -821,7 +821,7 @@ private fun AdvancedSyncCard(
 
         taiXuModels.take(4).forEachIndexed { index, model ->
             if (index > 0) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                SettingsDivider(inset = 12.dp)
             }
             Row(
                 modifier = Modifier
@@ -894,7 +894,7 @@ private fun SwitchProviderDialog(
 
                 providers.forEachIndexed { index, provider ->
                     if (index > 0) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                        SettingsDivider(inset = 12.dp)
                     }
                     Row(
                         modifier = Modifier
@@ -916,7 +916,7 @@ private fun SwitchProviderDialog(
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
-                HorizontalDivider()
+                SettingsDivider(inset = 0.dp)
                 Spacer(modifier = Modifier.height(10.dp))
 
                 Text(
@@ -927,7 +927,7 @@ private fun SwitchProviderDialog(
 
                 taiXuModels.forEachIndexed { index, model ->
                     if (index > 0) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
+                        SettingsDivider(inset = 12.dp)
                     }
                     Row(
                         modifier = Modifier

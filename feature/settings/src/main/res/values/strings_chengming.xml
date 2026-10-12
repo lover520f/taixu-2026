@@ -1,0 +1,9 @@
+<resources>
+    <string name="chengming_accessibility">澄明 · 可读性与动态效果</string>
+    <string name="chengming_reduce_transparency">减少透明度</string>
+    <string name="chengming_reduce_transparency_description">导航与浮动操作使用实色表面，减少背景干扰</string>
+    <string name="chengming_increase_contrast">增强对比度</string>
+    <string name="chengming_increase_contrast_description">增强文字与边界，并跟随系统高对比度设置</string>
+    <string name="chengming_reduce_motion">减少动态效果</string>
+    <string name="chengming_reduce_motion_description">减少弹性与装饰动画；系统关闭动画时自动生效</string>
+</resources>

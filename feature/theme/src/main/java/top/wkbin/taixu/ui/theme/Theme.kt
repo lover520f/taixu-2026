@@ -38,12 +38,13 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import top.wkbin.taixu.feature.theme.R
 import android.graphics.BitmapFactory
+import top.wkbin.taixu.core.model.ChengmingAccessibilityOptions
 
 /**
  * 太墟内置主题风格。
  *
  * - [XUANTONG]（玄同）—— 默认主题。源自《老子》「万物同归于玄」，Material You 设计系统（支持 Monet 动态壁纸取色与曜石/素白基调）。
- * - [CHENGMING]（澄明）—— 液态玻璃主题。源自「澄明」通透清澈之意，以毛玻璃折射 + 流光 Aurora 渲染虚实交织的界面。
+ * - [CHENGMING]（澄明）—— Cupertino 内容表面与局部液态玻璃导航、操作控件。
  */
 enum class ThemeStyle(
     val id: String,
@@ -61,7 +62,7 @@ enum class ThemeStyle(
         id = "liquid_glass",
         displayName = "液态玻璃",
         displayNameEn = "Liquid Glass",
-        description = "液态玻璃主题 · 毛玻璃折射 + 流光 Aurora，通透清澈的玻璃质感。",
+        description = "澄明主题 · 清晰的 Cupertino 内容表面，搭配局部液态玻璃导航与操作控件。",
     ),
     ;
 
@@ -177,6 +178,12 @@ val ChengmingLightColors = lightColorScheme(
     surfaceContainerHighest = ChengmingLightSurfaceContainerHighest,
     outline = ChengmingLightOutline,
     outlineVariant = ChengmingLightOutlineVariant,
+    surfaceDim = ChengmingLightSurfaceContainerHighest,
+    surfaceBright = ChengmingLightSurfaceContainerLowest,
+    surfaceTint = ChengmingLightPrimary,
+    inverseSurface = ChengmingDarkSurfaceContainer,
+    inverseOnSurface = ChengmingDarkOnSurface,
+    inversePrimary = ChengmingDarkPrimary,
 )
 
 val ChengmingDarkColors = darkColorScheme(
@@ -209,6 +216,12 @@ val ChengmingDarkColors = darkColorScheme(
     surfaceContainerHighest = ChengmingDarkSurfaceContainerHighest,
     outline = ChengmingDarkOutline,
     outlineVariant = ChengmingDarkOutlineVariant,
+    surfaceDim = ChengmingDarkSurfaceContainerLowest,
+    surfaceBright = ChengmingDarkSurfaceContainerHighest,
+    surfaceTint = ChengmingDarkPrimary,
+    inverseSurface = ChengmingLightBackground,
+    inverseOnSurface = ChengmingLightOnSurface,
+    inversePrimary = ChengmingLightPrimary,
 )
 
 /**
@@ -228,6 +241,7 @@ fun TaiXuTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     backgroundUri: String? = null,
+    accessibility: ChengmingAccessibilityOptions = ChengmingAccessibilityOptions(),
     content: @Composable () -> Unit,
 ) {
     val view = LocalView.current
@@ -265,15 +279,18 @@ fun TaiXuTheme(
         ThemeStyle.LIQUID_GLASS -> if (darkTheme) ChengmingDarkColors else ChengmingLightColors
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = if (style == ThemeStyle.LIQUID_GLASS) LiquidGlassTypography else AppTypography,
-        shapes = TaiXuShapes,
-    ) {
-        if (style == ThemeStyle.LIQUID_GLASS) {
-            LiquidGlassRoot(content, darkTheme, backgroundUri)
-        } else {
-            content()
+    val accessibilityPolicy = rememberChengmingAccessibility(accessibility)
+    CompositionLocalProvider(LocalThemeStyle provides style, LocalChengmingAccessibility provides accessibilityPolicy) {
+        MaterialTheme(
+            colorScheme = if (style == ThemeStyle.LIQUID_GLASS && accessibilityPolicy.increaseContrast) colorScheme.withChengmingContrast() else colorScheme,
+            typography = if (style == ThemeStyle.LIQUID_GLASS) LiquidGlassTypography else AppTypography,
+            shapes = TaiXuShapes,
+        ) {
+            if (style == ThemeStyle.LIQUID_GLASS) {
+                ChengmingCupertinoTheme { LiquidGlassRoot(content, darkTheme, backgroundUri) }
+            } else {
+                content()
+            }
         }
     }
 }
@@ -289,20 +306,17 @@ val LocalLiquidGlassBackdrop = staticCompositionLocalOf<LayerBackdrop?> { null }
 /**
  * 澄明组件使用的稳定背景折射源。
  *
- * 页面内容会记录到 [LocalLiquidGlassBackdrop] 供底部导航折射；卡片、按钮等页面内部组件
+ * 页面内容会记录到 [LocalLiquidGlassBackdrop] 供底部导航折射；按钮等页面内部玻璃组件
  * 不能反过来读取同一记录层，否则部分设备的 RenderThread 会形成递归合成。这里单独记录
  * Aurora 根背景，让任意层级的玻璃组件都能安全取样。
  */
 val LocalLiquidGlassSurfaceBackdrop = staticCompositionLocalOf<LayerBackdrop?> { null }
 
 /**
- * 液态玻璃根容器（核心面液态玻璃）：
- * 底层绘制缓慢漂移的流光 Aurora，并通过 [layerBackdrop] 捕获为折射源；
- * 应用内容绘制在其上，半透明配色透出流光。底部导航等玻璃组件读取
- * [LocalLiquidGlassBackdrop]，用 [com.kyant.backdrop.drawBackdrop] 叠加毛玻璃折射，
- * 呈现悬浮磨砂玻璃效果（见 RuntimeBottomBar）。
+ * 澄明根容器：独立记录壁纸或纯色底作为操作控件的折射源。
+ * 内容层使用稳定的不透明语义色；底部导航读取页面记录层，呈现悬浮玻璃效果。
  *
- * 在 RenderEffect 不可用的设备上，折射会自动退化为"半透明冰霜 + 流光底色"，不崩溃。
+ * 在 RenderEffect 不可用的设备上，玻璃效果退化，内容表面仍保持清晰。
  */
 @Composable
 private fun LiquidGlassRoot(content: @Composable () -> Unit, darkTheme: Boolean, backgroundUri: String?) {
@@ -310,7 +324,7 @@ private fun LiquidGlassRoot(content: @Composable () -> Unit, darkTheme: Boolean,
     val surfaceBackdrop = rememberLayerBackdrop()
     CompositionLocalProvider(
         LocalLiquidGlassBackdrop provides pageBackdrop,
-        LocalLiquidGlassSurfaceBackdrop provides surfaceBackdrop,
+        LocalLiquidGlassSurfaceBackdrop provides surfaceBackdrop.takeIf { LocalChengmingAccessibility.current.glassEnabled },
     ) {
         // Keep the source layer separate from consumers of the backdrop. Capturing a
         // parent that also contains drawBackdrop surfaces can recurse inside RenderThread.

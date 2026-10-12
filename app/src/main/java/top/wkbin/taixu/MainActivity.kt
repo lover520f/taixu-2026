@@ -58,6 +58,7 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import top.wkbin.taixu.core.datastore.AppearancePreferences
+import top.wkbin.taixu.core.model.ChengmingAccessibilityOptions
 import top.wkbin.taixu.core.model.AppUpdateInfo
 import top.wkbin.taixu.core.network.AppUpdateManager
 import top.wkbin.taixu.runtime.service.RuntimeServiceController
@@ -68,7 +69,6 @@ import top.wkbin.taixu.ui.navigation.TaiXuNavHost
 import top.wkbin.taixu.ui.theme.TaiXuTheme
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-
 import top.wkbin.taixu.core.common.navigation.AppNavigationTarget
 import top.wkbin.taixu.core.common.navigation.GlobalNavigationBus
 import top.wkbin.taixu.harness.mcp.oauth.McpOAuthCoordinator
@@ -118,6 +118,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val themeMode by settingsDataStore.themeMode.collectAsStateWithLifecycle(initialValue = "system")
             val themeStyle by settingsDataStore.themeStyle.collectAsStateWithLifecycle(initialValue = "material_you")
+            val accessibility by settingsDataStore.accessibility.options.collectAsStateWithLifecycle(initialValue = ChengmingAccessibilityOptions())
             val dynamicColorEnabled by settingsDataStore.dynamicColorEnabled.collectAsStateWithLifecycle(initialValue = true)
             val chengmingBackgroundUri by settingsDataStore.chengmingBackgroundUri.collectAsStateWithLifecycle(initialValue = null)
             val pageScale by settingsDataStore.appFontScale.collectAsStateWithLifecycle(initialValue = 1f)
@@ -128,7 +129,6 @@ class MainActivity : AppCompatActivity() {
                 "dark" -> true
                 else -> systemDark
             }
-
             CompositionLocalProvider(
                 LocalDensity provides Density(
                     density = systemDensity.density * pageScale.coerceIn(0.8f, 1.3f),
@@ -140,6 +140,7 @@ class MainActivity : AppCompatActivity() {
                     darkTheme = isDark,
                     dynamicColor = dynamicColorEnabled,
                     backgroundUri = chengmingBackgroundUri,
+                    accessibility = accessibility,
                 ) {
                 val onboardingViewModel: OnboardingViewModel = koinViewModel()
                 val onboarding by onboardingViewModel.status.collectAsStateWithLifecycle()

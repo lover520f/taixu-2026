@@ -1,0 +1,4 @@
+<resources>
+    <string name="components_clear_search">Clear search</string>
+    <string name="components_invalid_input">Invalid input</string>
+</resources>

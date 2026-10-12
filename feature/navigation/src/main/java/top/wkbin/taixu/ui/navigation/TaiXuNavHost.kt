@@ -1,5 +1,4 @@
 package top.wkbin.taixu.ui.navigation
-
 import org.koin.compose.viewmodel.koinViewModel
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -36,7 +35,8 @@ import top.wkbin.taixu.ui.chat.ChatScreen
 import top.wkbin.taixu.ui.chat.ChatViewModel
 import top.wkbin.taixu.ui.components.MainDestination
 import top.wkbin.taixu.ui.components.RuntimeBottomBar
-import top.wkbin.taixu.ui.theme.LocalLiquidGlassBackdrop
+import top.wkbin.taixu.ui.theme.LocalThemeStyle
+import top.wkbin.taixu.ui.theme.ThemeStyle
 import top.wkbin.taixu.ui.developer.DeveloperScreen
 import top.wkbin.taixu.ui.developer.AdbLogcatScreen
 import top.wkbin.taixu.ui.preview.LiquidGlassCatalogScreen
@@ -781,8 +781,8 @@ fun TaiXuNavHost(
     }
 
     val density = LocalDensity.current
-    val liquidGlassBackdrop = LocalLiquidGlassBackdrop.current
-    val showLiquidBottomBar = liquidGlassBackdrop != null &&
+    val chengming = LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS
+    val showLiquidBottomBar = chengming &&
         activeStack.size == 1 &&
         WindowInsets.ime.getBottom(density) == 0
     // Hoist decorators so tab switches (key below) do not drop entry Saveable/ViewModel state.
@@ -806,7 +806,7 @@ fun TaiXuNavHost(
                 )
             }
         }
-        if (liquidGlassBackdrop != null) {
+        if (chengming) {
             // Keep the expensive glass layers composed while a secondary destination is open.
             // Recreating both backdrop render layers in the same frame as the root screen was
             // the main source of pop-navigation stalls. Moving the retained bar off-screen also

@@ -104,7 +104,7 @@ enum class CatalogWallpaper(val title: String) {
  * 3. 药丸分段选择器 (RuntimeSegmentedControl)；
  * 4. 内嵌凹陷文本框与搜索栏 (RuntimeOutlinedTextField / RuntimeSearchBar)；
  * 5. 双重折射滑动条与开关 (RuntimeSlider / RuntimeSwitch)；
- * 6. 模态底部抽屉与多层嵌套玻璃 (RuntimeModalBottomSheet Glass-on-Glass)；
+ * 6. 模态底部抽屉与普通内容表面 (RuntimeModalBottomSheet & Content)；
  * 7. 上下文浮动菜单与弹窗 (RuntimeDropdownMenu / RuntimeAlertDialog)。
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -230,7 +230,7 @@ fun LiquidGlassCatalogScreen(
                             onRadioChange = { radioIndex = it },
                         )
 
-                        // 展区 6：浮层、抽屉与多层嵌套 (Sheets & Dialogs Glass-on-Glass)
+                        // 展区 6：浮层、抽屉与普通内容 (Sheets & Dialogs)
                         CatalogOverlaysSection(
                             onOpenSheet = { showBottomSheet = true },
                             onOpenDialog = { showAlertDialog = true },
@@ -265,7 +265,7 @@ fun LiquidGlassCatalogScreen(
                             verticalArrangement = Arrangement.spacedBy(16.dp),
                         ) {
                             Text(
-                                text = "✨ Glass-on-Glass 安全嵌套演示：本抽屉使用 Thick 材质，抽屉内部的卡片与按钮已自动通过 CompositionLocalProvider 折射本抽屉，彻底杜绝 RenderThread 递归合成崩溃。",
+                                text = "内容与操作分层：抽屉内的说明卡片使用稳定底色，玻璃只用于操作控件。列表、正文与代码不叠加玻璃折射。",
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -276,13 +276,13 @@ fun LiquidGlassCatalogScreen(
                             ) {
                                 Column(Modifier.padding(16.dp)) {
                                     Text(
-                                        "嵌套卡片 (Second Glass Layer)",
+                                        "普通内容表面 (Content Surface)",
                                         style = AppleTypography.Headline,
                                         color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     Spacer(Modifier.height(6.dp))
                                     Text(
-                                        "注意观察此卡片边缘的透镜折射与高光，背景正确折射抽屉本身，呈现物理级半透明进深感。",
+                                        "此卡片保留不透明底色与清晰文字；抽屉材质不会将内容卡片自动变成第二层玻璃。",
                                         style = AppleTypography.Subhead,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
@@ -292,7 +292,7 @@ fun LiquidGlassCatalogScreen(
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.fillMaxWidth(),
                                     ) {
-                                        Text("确认并关闭抽屉", color = Color.White)
+                                        Text("确认并关闭抽屉")
                                     }
                                 }
                             }
@@ -316,7 +316,7 @@ fun LiquidGlassCatalogScreen(
                                 onClick = { showAlertDialog = false },
                                 tint = MaterialTheme.colorScheme.primary,
                             ) {
-                                Text("知道了", color = Color.White)
+                                Text("知道了")
                             }
                         },
                         dismissButton = {
@@ -370,7 +370,7 @@ private fun CatalogModeBanner(
                 }
             }
             RuntimeBadge(containerColor = MaterialTheme.colorScheme.primary) {
-                Text(if (themeStyle == ThemeStyle.LIQUID_GLASS) "iOS HIG" else "M3 Native")
+                Text(if (themeStyle == ThemeStyle.LIQUID_GLASS) "澄明" else "M3 Native")
             }
         }
     }
@@ -387,7 +387,7 @@ private fun CatalogTypographySection() {
         ) {
             SectionHeader(
                 title = "字体与排版标尺 (Apple HIG Scale)",
-                subtitle = "San Francisco (SF Pro) 字重阶梯与负向 Tight Tracking",
+                subtitle = "Android 系统字体 · Apple 语义字号 · 中文零字距",
             )
             Text("LargeTitle (34sp Bold)", style = AppleTypography.LargeTitle)
             Text("Title1 (28sp Bold)", style = AppleTypography.Title1)
@@ -426,8 +426,8 @@ private fun CatalogButtonsSection() {
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
                 ) {
-                    RuntimeIcon(RuntimeIconName.Play, Modifier.size(18.dp), tint = Color.White)
-                    Text("流光按钮", color = Color.White, style = AppleTypography.Button)
+                    RuntimeIcon(RuntimeIconName.Play, Modifier.size(18.dp))
+                    Text("流光按钮", style = AppleTypography.Button)
                 }
 
                 // 成功/绿色浸润按钮
@@ -436,8 +436,8 @@ private fun CatalogButtonsSection() {
                     tint = Color(0xFF34C759),
                     modifier = Modifier.weight(1f),
                 ) {
-                    RuntimeIcon(RuntimeIconName.Check, Modifier.size(18.dp), tint = Color.White)
-                    Text("成功浸润", color = Color.White, style = AppleTypography.Button)
+                    RuntimeIcon(RuntimeIconName.Check, Modifier.size(18.dp))
+                    Text("成功浸润", style = AppleTypography.Button)
                 }
             }
 
@@ -645,7 +645,7 @@ private fun CatalogOverlaysSection(
         ) {
             SectionHeader(
                 title = "抽屉、弹窗与浮层 (Sheets & Overlays)",
-                subtitle = "Thick/Regular 材质 + 28dp 大圆角 + Glass-on-Glass 安全嵌套",
+                subtitle = "局部玻璃浮层 + 不透明内容表面 + 清晰的操作层级",
             )
 
             Row(

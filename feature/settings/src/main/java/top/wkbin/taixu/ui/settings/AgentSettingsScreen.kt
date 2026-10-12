@@ -27,8 +27,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import top.wkbin.taixu.ui.components.RuntimeButton as Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import top.wkbin.taixu.ui.components.RuntimeDropdownMenu as DropdownMenu
+import top.wkbin.taixu.ui.components.RuntimeDropdownMenuItem as DropdownMenuItem
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.material3.SuggestionChip
@@ -37,7 +37,7 @@ import androidx.compose.material3.HorizontalDivider
 import top.wkbin.taixu.ui.components.RuntimeIconButton as IconButton
 import androidx.compose.material3.MaterialTheme
 import top.wkbin.taixu.ui.components.RuntimeOutlinedButton as OutlinedButton
-import androidx.compose.material3.OutlinedTextField
+import top.wkbin.taixu.ui.components.RuntimeOutlinedTextField as OutlinedTextField
 import androidx.compose.material3.Scaffold
 import top.wkbin.taixu.ui.components.RuntimeSlider as Slider
 import androidx.compose.material3.Surface
@@ -208,7 +208,7 @@ fun AgentSettingsScreen(
                         checked = thinkingExpanded,
                         onCheckedChange = viewModel::setThinkingExpanded,
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsDivider(inset = 54.dp)
                     AgentToggleRow(
                         icon = RuntimeIconName.Globe,
                         title = "展开时自动翻译英文思考为中文",
@@ -216,7 +216,7 @@ fun AgentSettingsScreen(
                         checked = thinkingAutoTranslate,
                         onCheckedChange = viewModel::setThinkingAutoTranslate,
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsDivider(inset = 54.dp)
                     AgentToggleRow(
                         icon = RuntimeIconName.Compress,
                         title = "自动收拢历史轮次的思考与工具过程",
@@ -251,7 +251,7 @@ fun AgentSettingsScreen(
                         checked = autoWorkspaceCwd,
                         onCheckedChange = viewModel::setAutoWorkspaceCwd,
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsDivider(inset = 54.dp)
                     AgentToggleRow(
                         icon = RuntimeIconName.Compress,
                         title = "智能压缩 Agent 命令输出",
@@ -259,17 +259,17 @@ fun AgentSettingsScreen(
                         checked = commandOutputCompressionEnabled,
                         onCheckedChange = viewModel::setCommandOutputCompressionEnabled,
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsDivider(inset = 54.dp)
                     ApprovalModeSelectorRow(
                         mode = approvalMode,
                         onModeChange = viewModel::setApprovalMode,
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsDivider(inset = 16.dp)
                     RunModeSelectorRow(
                         mode = runMode,
                         onModeChange = viewModel::setRunMode,
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsDivider(inset = 16.dp)
                     RunningSendModeSelectorRow(
                         mode = runningSendMode,
                         onModeChange = viewModel::setRunningSendMode,
@@ -285,23 +285,23 @@ fun AgentSettingsScreen(
                         currentValue = baseCommandTimeoutSeconds,
                         onValueChange = viewModel::setBaseCommandTimeoutSeconds,
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsDivider(inset = 16.dp)
                     RoundsSliderRow(
                         currentValue = maxToolRounds,
                         onValueChange = viewModel::setMaxToolRounds,
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsDivider(inset = 16.dp)
                     AutoContinuationSliderRow(
                         currentValue = roundLimitAutoContinuations,
                         roundsPerSegment = maxToolRounds,
                         onValueChange = viewModel::setRoundLimitAutoContinuations,
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsDivider(inset = 16.dp)
                     ToolsPerRoundSliderRow(
                         currentValue = maxToolsPerRound,
                         onValueChange = viewModel::setMaxToolsPerRound,
                     )
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsDivider(inset = 16.dp)
                     ConsecutiveFailuresSliderRow(
                         currentValue = maxConsecutiveFailures,
                         onValueChange = viewModel::setMaxConsecutiveFailures,
@@ -352,13 +352,13 @@ fun AgentSettingsScreen(
                         onCheckedChange = viewModel::setContextCompactionEnabled,
                     )
                     if (compactionEnabled) {
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        SettingsDivider(inset = 16.dp)
                         ContextBudgetSliderRow(
                             currentValue = contextBudgetTokens,
                             declaredTokens = activeModelDeclaredTokens,
                             onValueChange = viewModel::setContextBudgetTokens,
                         )
-                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        SettingsDivider(inset = 16.dp)
                         ContextFoldingRatioSliderRow(
                             currentValue = contextFoldingRatioPercent,
                             budget = effectiveContextBudget,
@@ -675,7 +675,7 @@ fun AgentSettingsScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(skill.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                    SettingsDivider(inset = 0.dp)
                     Text("注入系统的指导提示词 (System Prompt)：", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -820,14 +820,7 @@ private fun BaseCommandTimeoutSliderRow(
 
 @Composable
 private fun AgentSettingsGroup(content: @Composable () -> Unit) {
-    RuntimeCard(
-        Modifier.fillMaxWidth(),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-        borderColor = MaterialTheme.colorScheme.outlineVariant,
-        contentPadding = PaddingValues(0.dp),
-    ) {
-        Column { content() }
-    }
+    SettingsGroup(content = content)
 }
 
 @Composable
@@ -2025,7 +2018,7 @@ You are a helpful and expert AI assistant called {{char}}, based on model {{mode
             )
 
             if (enabled) {
-                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                SettingsDivider(inset = 0.dp)
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),

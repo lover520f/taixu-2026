@@ -15,19 +15,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -40,15 +28,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import top.wkbin.taixu.ui.components.RuntimeTextButton as TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import top.wkbin.taixu.ui.components.isLiquidGlassThemeActive
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -906,7 +887,14 @@ private fun ExtraKey(
     onClick: () -> Unit,
 ) {
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val isChengming = isLiquidGlassThemeActive()
+    val shape = if (isChengming) RoundedCornerShape(6.dp) else RoundedCornerShape(4.dp)
     val bg = when {
+        isChengming && isActive && isAccent -> MaterialTheme.colorScheme.primary
+        isChengming && isActive -> MaterialTheme.colorScheme.secondary
+        isChengming && isDanger -> MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+        isChengming && isAccent -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
+        isChengming -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
         isActive && isAccent -> MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)
         isActive -> MaterialTheme.colorScheme.tertiary.copy(alpha = 0.22f)
         isDanger -> MaterialTheme.colorScheme.errorContainer
@@ -914,12 +902,19 @@ private fun ExtraKey(
         else -> MaterialTheme.colorScheme.surfaceContainerHigh
     }
     val textCol = when {
+        isChengming && isActive -> MaterialTheme.colorScheme.onPrimary
+        isChengming && isDanger -> MaterialTheme.colorScheme.error
+        isChengming && isAccent -> MaterialTheme.colorScheme.primary
+        isChengming -> MaterialTheme.colorScheme.onSurface
         isActive && isAccent -> MaterialTheme.colorScheme.primary
         isActive -> MaterialTheme.colorScheme.tertiary
         isDanger -> MaterialTheme.colorScheme.onErrorContainer
         else -> MaterialTheme.colorScheme.onSurface
     }
     val borderCol = when {
+        isChengming && isActive -> Color.Transparent
+        isChengming && isDanger -> MaterialTheme.colorScheme.error.copy(alpha = 0.3f)
+        isChengming -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
         isActive && isAccent -> MaterialTheme.colorScheme.primary
         isActive -> MaterialTheme.colorScheme.tertiary
         isDanger -> MaterialTheme.colorScheme.error.copy(alpha = 0.35f)
@@ -930,7 +925,7 @@ private fun ExtraKey(
         modifier = modifier
             // Fixed short height → wider-than-tall keys (not square), saves console space.
             .height(28.dp)
-            .clip(RoundedCornerShape(4.dp))
+            .clip(shape)
             .clickable(onClick = {
                 if (hapticsEnabled) {
                     haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.TextHandleMove)
@@ -938,8 +933,8 @@ private fun ExtraKey(
                 onClick()
             }),
         color = bg,
-        shape = RoundedCornerShape(4.dp),
-        border = BorderStroke(1.dp, borderCol),
+        shape = shape,
+        border = BorderStroke(if (isChengming) 0.5.dp else 1.dp, borderCol),
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -948,10 +943,10 @@ private fun ExtraKey(
             Text(
                 label,
                 style = MaterialTheme.typography.labelSmall.copy(
-                    fontFamily = FontFamily.Monospace,
+                    fontFamily = if (isChengming) FontFamily.SansSerif else FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 9.sp,
-                    lineHeight = 10.sp,
+                    fontSize = if (isChengming) 10.sp else 9.sp,
+                    lineHeight = if (isChengming) 11.sp else 10.sp,
                 ),
                 color = textCol,
                 textAlign = TextAlign.Center,

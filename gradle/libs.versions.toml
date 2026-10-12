@@ -33,6 +33,7 @@ robolectric = "4.17"
 androidxTestCore = "1.7.0"
 # AndroidLiquidGlass (Kyant0) — Compose 液态玻璃效果库，澄明主题的渲染核心
 backdrop = "2.0.1"
+cupertino = "0.1.0-alpha04"
 coil = "3.6.3"
 coreSplashscreen = "1.2.0"
 # Baseline Profile：启动时预编译热点方法，治首次冷启动 JIT 现场编译慢
@@ -54,6 +55,7 @@ asm = "9.10.1"
 rhino = "1.7.15"
 
 [libraries]
+cupertino = { module = "io.github.alexzhirkevich:cupertino", version.ref = "cupertino" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 androidx-work-testing = { module = "androidx.work:work-testing", version.ref = "work" }
 koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }

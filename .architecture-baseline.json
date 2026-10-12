@@ -6,7 +6,7 @@
         "\u7ef4\u62a4\uff1a\u8fd0\u884c .\\gradlew.bat architectureBaselineSync \u81ea\u52a8\u540c\u6b65\u3002",
         "\u4e00\u6b21\u6027\u4f8b\u5916\uff082026-10-10\uff09\uff1a\u5168\u4ed3 FQN \u6e05\u7406\u4e3a\u5404\u6587\u4ef6\u65b0\u589e import\uff0c55 \u4e2a\u5b58\u91cf\u8d85\u9650\u6587\u4ef6\u5171 +286 \u884c\uff08\u7eaf import\u3001\u65e0\u903b\u8f91\u53d8\u66f4\uff09\uff0c\u7ecf\u7ef4\u62a4\u8005\u6279\u51c6\u4e00\u6b21\u6027\u767b\u8bb0\u57fa\u7ebf\uff1b\u6b64\u540e\u6062\u590d\u53ea\u8bb8\u4e0b\u8c03\u3002"
     ],
-    "generatedAt": "2026-10-10",
+    "generatedAt": "2026-10-12",
     "maxFileLines": 400,
     "fileCount": 111,
     "files": {
@@ -31,8 +31,8 @@
         "feature/chat/src/main/java/top/wkbin/taixu/ui/chat/floating/FloatingChatView.kt": 656,
         "feature/components/src/main/java/top/wkbin/taixu/ui/components/LiquidGlassUtils.kt": 548,
         "feature/components/src/main/java/top/wkbin/taixu/ui/components/MarkdownText.kt": 1142,
-        "feature/components/src/main/java/top/wkbin/taixu/ui/components/RuntimeComponents.kt": 2543,
-        "feature/components/src/main/java/top/wkbin/taixu/ui/components/RuntimeGlassControls.kt": 1398,
+        "feature/components/src/main/java/top/wkbin/taixu/ui/components/RuntimeComponents.kt": 947,
+        "feature/components/src/main/java/top/wkbin/taixu/ui/components/RuntimeGlassControls.kt": 628,
         "feature/developer/src/main/java/top/wkbin/taixu/ui/developer/AdbLogcatScreen.kt": 431,
         "feature/developer/src/main/java/top/wkbin/taixu/ui/developer/DeveloperScreen.kt": 745,
         "feature/developer/src/main/java/top/wkbin/taixu/ui/developer/DeveloperViewModel.kt": 439,

@@ -20,9 +20,21 @@ import top.wkbin.taixu.ui.components.*
 internal fun LocalBackupSettingsCard() {
     var open by remember { mutableStateOf(false) }
     RuntimeCard(onClick = { open = true }, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(16.dp)) {
+        if (isLiquidGlassThemeActive()) Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            IconTile(RuntimeIconName.Save, size = 28.dp)
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.local_backup_title), style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.local_backup_subtitle), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+            }
+            RuntimeIcon(RuntimeIconName.ChevronRight, Modifier.size(12.dp), tint = MaterialTheme.colorScheme.outline)
+        } else {
         Text(stringResource(R.string.local_backup_title), style = MaterialTheme.typography.titleMedium)
         Text(stringResource(R.string.local_backup_subtitle), style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
     if (open) LocalBackupDialog(onDismiss = { open = false })
 }

@@ -36,7 +36,7 @@ import top.wkbin.taixu.ui.components.rememberSpotlightAnchor
 import top.wkbin.taixu.ui.components.spotlightAnchor
 import top.wkbin.taixu.ui.components.RuntimeButton as Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FilterChip
+import top.wkbin.taixu.ui.components.RuntimeFilterChip as FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import top.wkbin.taixu.ui.components.RuntimeFilledTonalButton as FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
@@ -1121,7 +1121,7 @@ private fun ToolCard(
                 NoticeBanner(text = "自检异常: ${verification.detail}", isError = true)
             }
 
-            HorizontalDivider(color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.7f))
+            SettingsDivider(inset = 0.dp)
 
             // Actions row: Spacious, distinct secondary buttons on left, prominent action on right
             Row(

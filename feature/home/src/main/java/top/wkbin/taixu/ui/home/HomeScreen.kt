@@ -1,5 +1,4 @@
 package top.wkbin.taixu.ui.home
-
 import org.koin.compose.viewmodel.koinViewModel
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -95,27 +94,25 @@ import top.wkbin.taixu.ui.components.RuntimeCard
 import top.wkbin.taixu.ui.components.RuntimeIcon
 import top.wkbin.taixu.ui.components.RuntimeIconName
 import top.wkbin.taixu.ui.components.RuntimeTopBar
+import top.wkbin.taixu.ui.components.rememberRuntimeTopBarScrollState
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import top.wkbin.taixu.ui.components.RuntimeButton
 import top.wkbin.taixu.ui.components.distroIconFor
 import top.wkbin.taixu.ui.components.StatusBadge
 import top.wkbin.taixu.ui.components.isLiquidGlassThemeActive
 import android.os.SystemClock
 import top.wkbin.taixu.core.model.InstalledDistro
-
 /** 自动体检防抖间隔：ON_RESUME 触发时距上次不足该间隔则跳过。 */
 private const val DOCTOR_CHECK_MIN_INTERVAL_MS = 30_000L
-
 /**
  * 主题感知的健康绿 / 警告橙：替代硬编码深色，暗色主题下自动换用高亮度变体保证对比。
  */
 @Composable
 private fun healthyStatusColor(): Color =
     if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color(0xFF81C784) else Color(0xFF2E7D32)
-
 @Composable
 private fun warningStatusColor(): Color =
     if (MaterialTheme.colorScheme.background.luminance() < 0.5f) Color(0xFFFFB74D) else Color(0xFFE65100)
-
 /**
  * 太墟 · 运行仪表盘 (TaiXu Linux Runtime Dashboard)
  * 集成沙箱引擎状态、运行环境体检自愈中心、实时内存/存储监控与规格信息
@@ -130,7 +127,6 @@ fun HomeScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     var lastAutoDoctorCheckAt by remember { mutableLongStateOf(0L) }
-
     val state by viewModel.runtimeState.collectAsStateWithLifecycle()
     val metrics by viewModel.metrics.collectAsStateWithLifecycle()
     val doctorReport by viewModel.doctorReport.collectAsStateWithLifecycle()
@@ -142,7 +138,6 @@ fun HomeScreen(
     val switchingDistro by viewModel.switchingDistro.collectAsStateWithLifecycle()
     val modeStatus by viewModel.executionModeStatus.collectAsStateWithLifecycle()
     val webChatStatus by viewModel.webChatStatus.collectAsStateWithLifecycle()
-
     val allFilesPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
@@ -203,11 +198,12 @@ fun HomeScreen(
     }
 
     val isLiquidGlassTheme = isLiquidGlassThemeActive()
+    val topBarScroll = rememberRuntimeTopBarScrollState()
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
-                title = stringResource(R.string.home_dashboard_title),
+                    largeTitle = true, scrollState = topBarScroll,                title = stringResource(R.string.home_dashboard_title),
                 statusText = "${metrics.linuxDistro} · ${metrics.cpuArch}",
                 actions = {
                     IconButton(
@@ -246,10 +242,10 @@ fun HomeScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .liquidGlassContent()
+                .liquidGlassContent().nestedScroll(topBarScroll.nestedScrollConnection)
                 .padding(top = innerPadding.calculateTopPadding())
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .padding(horizontal = if (isLiquidGlassTheme) 20.dp else 16.dp, vertical = 12.dp)
                 .padding(bottom = if (isLiquidGlassTheme) 104.dp else innerPadding.calculateBottomPadding() + 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
@@ -286,6 +282,10 @@ fun HomeScreen(
                 onOpenToolCenter = onOpenToolCenter,
             )
 
+            if (isLiquidGlassTheme) ChengmingResourceSummary(
+                "${metrics.memoryUsedMb} MB", stringResource(R.string.home_memory_total, metrics.memoryTotalMb), metrics.memoryUsagePercent / 100f,
+                "${metrics.storageUsedGb} GB", stringResource(R.string.home_storage_total, metrics.storageTotalGb), metrics.storageUsagePercent / 100f,
+            ) else
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -854,11 +854,11 @@ private fun RuntimeEngineStatusCard(
 
     RuntimeCard(
         modifier = Modifier.fillMaxWidth(),
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        contentPadding = PaddingValues(18.dp),
+        containerColor = if (isLiquidGlassThemeActive()) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceContainer,
+        contentPadding = PaddingValues(if (isLiquidGlassThemeActive()) 14.dp else 18.dp),
     ) {
         Column(
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(if (isLiquidGlassThemeActive()) 10.dp else 12.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -1087,8 +1087,8 @@ private fun ExecutionModeBadge(
 
     Surface(
         shape = RoundedCornerShape(10.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerLow,
-        border = BorderStroke(1.dp, statusColor.copy(alpha = 0.35f)),
+        color = if (isLiquidGlassThemeActive()) MaterialTheme.colorScheme.surfaceContainer else MaterialTheme.colorScheme.surfaceContainerLow,
+        border = if (isLiquidGlassThemeActive()) null else BorderStroke(1.dp, statusColor.copy(alpha = 0.35f)),
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(10.dp))

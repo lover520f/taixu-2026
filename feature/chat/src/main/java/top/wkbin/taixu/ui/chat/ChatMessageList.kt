@@ -1,5 +1,4 @@
 package top.wkbin.taixu.ui.chat
-
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.animation.core.LinearEasing
@@ -73,7 +72,6 @@ import top.wkbin.taixu.harness.compaction.CompactionSnapshot
 import top.wkbin.taixu.runtime.ProjectType
 import top.wkbin.taixu.harness.AskUserQuestions
 import top.wkbin.taixu.harness.session.ConversationBranch
-
 /**
  * 工具卡片折叠状态 Saver：Map 本身不能存入 Bundle（rememberSaveable 会抛 IllegalArgumentException），
  * 把 entries 序列化为 ArrayList<Pair<String, Boolean>>（两者均可安全保存）。
@@ -82,7 +80,6 @@ private val ExpandedOverridesSaver = Saver<Map<String, Boolean>, ArrayList<Pair<
     save = { state -> ArrayList(state.map { (key, value) -> key to value }) },
     restore = { saved -> saved.toMap() },
 )
-
 /**
  * 消息流 LazyColumn：骨架屏、空态引导、压缩横幅、任务看板、消息渲染项与审批卡。
  */
@@ -131,7 +128,6 @@ internal fun ChatMessageList(
 ) {
     // 折叠状态用自定义 Saver：Map 不能直接存入 Bundle（会抛 IllegalArgumentException）
     var expandedOverrides by rememberSaveable(stateSaver = ExpandedOverridesSaver) { mutableStateOf(mapOf<String, Boolean>()) }
-
     val reveal = rememberRoundRevealState()
     val renderItems = rememberChatRenderItems(messages, toolResults, expandedOverrides, chatRoundCollapse, reveal.limits)
     val waitingForFirstOutput = remember(
@@ -309,7 +305,6 @@ internal fun ChatMessageList(
         ScrollFadeOverlay(top = 4.dp, bottom = 20.dp)
     }
 }
-
 /** Visible while a non-streaming model (notably image generators) is still preparing its result. */
 @Composable
 private fun AssistantGenerationPlaceholder() {
@@ -343,7 +338,6 @@ private fun AssistantGenerationPlaceholder() {
         }
     }
 }
-
 @Composable
 internal fun EmptyChatGuidance(
     workspaceProject: WorkspaceProject? = null,
@@ -391,8 +385,8 @@ internal fun EmptyChatGuidance(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+            .padding(vertical = if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) 16.dp else 24.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         onboardingPrivilege?.let { privilege ->
             val ready = privilege == OnboardingPrivilege.SHIZUKU_READY || privilege == OnboardingPrivilege.ROOT_READY
@@ -412,33 +406,38 @@ internal fun EmptyChatGuidance(
                     ),
                     style = MaterialTheme.typography.bodySmall,
                     color = if (ready) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                 )
             }
         }
         Text(
             stringResource(R.string.chat_agent_intro),
-            style = MaterialTheme.typography.bodyMedium,
+            style = if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) MaterialTheme.typography.bodySmall else MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
             stringResource(R.string.chat_quick_start),
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.primary,
+            style = if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) MaterialTheme.typography.bodySmall else MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
         )
+        if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) {
+            ChengmingQuickActions(if (enabledPhrases.isNotEmpty()) enabledPhrases.map { phrase ->
+                ChengmingQuickAction(parseIconName(phrase.iconName), phrase.title, phrase.description.ifBlank { phrase.content }) { onSelectPhrase(phrase) }
+            } else quickCommands.map { cmd -> ChengmingQuickAction(cmd.icon, cmd.command, cmd.description) { onSelectCommand(cmd) } })
+        } else
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (enabledPhrases.isNotEmpty()) {
                 enabledPhrases.forEach { phrase ->
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        shape = RoundedCornerShape(10.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        shape = RoundedCornerShape(if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) 14.dp else 10.dp),
+                        border = if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onSelectPhrase(phrase) },
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
@@ -446,8 +445,8 @@ internal fun EmptyChatGuidance(
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     phrase.title,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    style = if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.labelMedium,
+                                    color = if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.SemiBold,
                                 )
                                 Text(
@@ -465,14 +464,14 @@ internal fun EmptyChatGuidance(
                 quickCommands.forEach { cmd ->
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceContainerLow,
-                        shape = RoundedCornerShape(10.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        shape = RoundedCornerShape(if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) 14.dp else 10.dp),
+                        border = if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable { onSelectCommand(cmd) },
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                         ) {
@@ -480,8 +479,8 @@ internal fun EmptyChatGuidance(
                             Column(Modifier.weight(1f)) {
                                 Text(
                                     cmd.command,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    style = if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.labelMedium,
+                                    color = if (top.wkbin.taixu.ui.components.isLiquidGlassThemeActive()) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.primary,
                                     fontFamily = FontFamily.Monospace,
                                 )
                                 Text(cmd.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

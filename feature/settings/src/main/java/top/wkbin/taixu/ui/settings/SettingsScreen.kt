@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -37,8 +38,11 @@ import top.wkbin.taixu.ui.components.RuntimeCard
 import top.wkbin.taixu.ui.components.RuntimeIcon
 import top.wkbin.taixu.ui.components.RuntimeIconName
 import top.wkbin.taixu.ui.components.RuntimeTopBar
+import top.wkbin.taixu.ui.components.rememberRuntimeTopBarScrollState
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import top.wkbin.taixu.ui.components.liquidGlassContent
-import top.wkbin.taixu.ui.theme.LocalLiquidGlassBackdrop
+import top.wkbin.taixu.ui.theme.LocalThemeStyle
+import top.wkbin.taixu.ui.theme.ThemeStyle
 
 /**
  * 太墟 · 乾坤配置 (TaiXu Settings & Models)
@@ -61,7 +65,6 @@ fun SettingsScreen(
     val skills by viewModel.allSkills.collectAsStateWithLifecycle()
     val effectiveExecutionMode by viewModel.effectiveExecutionMode.collectAsStateWithLifecycle()
     val installedDistros by viewModel.installedDistros.collectAsStateWithLifecycle()
-    val activeDistroId by viewModel.activeDistroId.collectAsStateWithLifecycle()
     val terminalFontSize by viewModel.terminalFontSize.collectAsStateWithLifecycle()
 
     val themeLabel = when (themeMode) {
@@ -70,20 +73,55 @@ fun SettingsScreen(
         else -> "跟随系统"
     }
 
-    val context = androidx.compose.ui.platform.LocalContext.current
     val appVersionName = rememberAppVersion()
+    val chengming = LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS
+    val topBarScroll = rememberRuntimeTopBarScrollState()
+    val categories = listOf(
+        SettingsCategory(
+            RuntimeIconName.Brain, MaterialTheme.colorScheme.primary,
+            (if (chengming) "智能体与模型" else "智能体与 AI 模型"), "模型档案 · 插件工具中心 · 技能与 MCP 生态",
+            if (models.isEmpty()) "未配置模型" else "${models.size} 个模型 · ${skills.count { it.isEnabled }} 技能",
+            onOpenAgentEco,
+        ),
+        SettingsCategory(
+            RuntimeIconName.Server, MaterialTheme.colorScheme.tertiary,
+            (if (chengming) "容器与存储" else "Linux 容器与存储"), "多发行版管理 · 宿主存储映射 · 运行特权模式",
+            "${installedDistros.size} 套系统 · ${effectiveExecutionMode.shortLabel}", onOpenLinuxEnv,
+        ),
+        SettingsCategory(
+            RuntimeIconName.Palette, MaterialTheme.colorScheme.secondary,
+            (if (chengming) "外观与显示" else "外观、字号与终端定制"), "深浅色主题 · 应用字号缩放 · 终端配色与字体",
+            "$themeLabel · ${terminalFontSize}sp", onOpenAppearance,
+        ),
+        SettingsCategory(
+            RuntimeIconName.Admin, MaterialTheme.colorScheme.primary,
+            (if (chengming) "系统与诊断" else "系统保活与开发者诊断"), "后台电池优化白名单 · 调试监控 · PRoot 控制台",
+            if (developer) "诊断模式已开启" else "运行平稳", onOpenSystemDev,
+        ),
+        SettingsCategory(
+            RuntimeIconName.Sparkles, MaterialTheme.colorScheme.tertiary,
+            "特色功能", "一句话做 App · AI 圆桌 · 晨报哨兵 · WebChat 大屏 · A2UI 界面",
+            "5 项功能", onOpenFeatureHub,
+        ),
+        SettingsCategory(
+            RuntimeIconName.Community, MaterialTheme.colorScheme.secondary,
+            (if (chengming) "关于太墟" else "关于、更新与官方社区"), "检查新版本 · GitHub 开源仓库 · 官方 QQ 交流群",
+            if (appVersionName == "unknown") "版本号未知 · 稳定版" else "v$appVersionName 稳定版",
+            onOpenAboutCommunity,
+        ),
+    )
 
-    val glassBackdrop = LocalLiquidGlassBackdrop.current
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             RuntimeTopBar(
                 title = "太墟 · 乾坤",
-                statusText = "系统设置与控制中枢",
+                statusText = if (chengming) null else "系统设置与控制中枢",
+                largeTitle = chengming, scrollState = topBarScroll,
             )
         },
         bottomBar = {
-            if (glassBackdrop == null) {
+            if (!chengming) {
                 RuntimeBottomBar(MainDestination.Settings, onNavigate)
             }
         },
@@ -91,9 +129,9 @@ fun SettingsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .liquidGlassContent()
+                .liquidGlassContent().nestedScroll(topBarScroll.nestedScrollConnection)
                 .padding(top = padding.calculateTopPadding()),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 104.dp),
+            contentPadding = PaddingValues(start = if (chengming) 20.dp else 16.dp, end = if (chengming) 20.dp else 16.dp, top = 10.dp, bottom = 104.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             // 全局功能搜索快捷入口卡片
@@ -101,8 +139,9 @@ fun SettingsScreen(
                 RuntimeCard(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = onOpenSearch,
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.55f),
-                    borderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
+                    containerColor = if (chengming) MaterialTheme.colorScheme.surfaceContainerHigh
+                        else MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.55f),
+                    borderColor = if (chengming) Color.Transparent else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.45f),
                     contentPadding = PaddingValues(horizontal = 14.dp, vertical = 11.dp),
                 ) {
                     Row(
@@ -121,7 +160,7 @@ fun SettingsScreen(
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                             modifier = Modifier.weight(1f),
                         )
-                        RuntimeIcon(
+                        if (!chengming) RuntimeIcon(
                             name = RuntimeIconName.ChevronRight,
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
@@ -134,81 +173,25 @@ fun SettingsScreen(
             item {
                 Text(
                     text = "系统与配置分类",
-                    style = MaterialTheme.typography.labelLarge,
+                    style = if (chengming) MaterialTheme.typography.bodySmall else MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 2.dp),
                 )
             }
 
-            // 1. 智能体与 AI 模型生态
-            item {
-                SettingsCategoryCard(
-                    icon = RuntimeIconName.Brain,
-                    accent = MaterialTheme.colorScheme.primary,
-                    title = "智能体与 AI 模型",
-                    subtitle = "模型档案 · 插件工具中心 · 技能与 MCP 生态",
-                    badge = if (models.isEmpty()) "未配置模型" else "${models.size} 个模型 · ${skills.count { it.isEnabled }} 技能",
-                    onClick = onOpenAgentEco,
-                )
-            }
-
-            // 2. Linux 容器沙箱与存储
-            item {
-                SettingsCategoryCard(
-                    icon = RuntimeIconName.Server,
-                    accent = MaterialTheme.colorScheme.tertiary,
-                    title = "Linux 容器与存储",
-                    subtitle = "多发行版管理 · 宿主存储映射 · 运行特权模式",
-                    badge = "${installedDistros.size} 套系统 · ${effectiveExecutionMode.shortLabel}",
-                    onClick = onOpenLinuxEnv,
-                )
-            }
-
-            // 3. 外观、字号与终端定制
-            item {
-                SettingsCategoryCard(
-                    icon = RuntimeIconName.Palette,
-                    accent = MaterialTheme.colorScheme.secondary,
-                    title = "外观、字号与终端定制",
-                    subtitle = "深浅色主题 · 应用字号缩放 · 终端配色与字体",
-                    badge = "$themeLabel · ${terminalFontSize}sp",
-                    onClick = onOpenAppearance,
-                )
-            }
-
-            // 4. 系统保活与开发者诊断
-            item {
-                SettingsCategoryCard(
-                    icon = RuntimeIconName.Admin,
-                    accent = MaterialTheme.colorScheme.primary,
-                    title = "系统保活与开发者诊断",
-                    subtitle = "后台电池优化白名单 · 调试监控 · PRoot 控制台",
-                    badge = if (developer) "诊断模式已开启" else "运行平稳",
-                    onClick = onOpenSystemDev,
-                )
-            }
-
-            item {
-                SettingsCategoryCard(
-                    icon = RuntimeIconName.Sparkles,
-                    accent = MaterialTheme.colorScheme.tertiary,
-                    title = "特色功能",
-                    subtitle = "一句话做 App · AI 圆桌 · 晨报哨兵 · WebChat 大屏 · A2UI 界面",
-                    badge = "5 项功能",
-                    onClick = onOpenFeatureHub,
-                )
-            }
-
-            // 5. 关于、更新与官方社区
-            item {
-                SettingsCategoryCard(
-                    icon = RuntimeIconName.Community,
-                    accent = MaterialTheme.colorScheme.secondary,
-                    title = "关于、更新与官方社区",
-                    subtitle = "检查新版本 · GitHub 开源仓库 · 官方 QQ 交流群",
-                    badge = if (appVersionName == "unknown") "版本号未知 · 稳定版" else "v$appVersionName 稳定版",
-                    onClick = onOpenAboutCommunity,
-                )
+            if (chengming) {
+                item { SettingsCategoryList(categories) }
+            } else {
+                items(categories) { category ->
+                    SettingsCategoryCard(
+                        icon = category.icon,
+                        accent = category.accent,
+                        title = category.title,
+                        subtitle = category.subtitle,
+                        badge = category.badge,
+                        onClick = category.onClick,
+                    )
+                }
             }
         }
     }

@@ -32,12 +32,15 @@ import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.HorizontalDivider
-import top.wkbin.taixu.ui.components.RuntimeIconButton as IconButton
 import androidx.compose.material3.MaterialTheme
+import top.wkbin.taixu.ui.components.RuntimeIconButton as IconButton
+import top.wkbin.taixu.ui.theme.LocalThemeStyle
+import top.wkbin.taixu.ui.theme.ThemeStyle
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -91,9 +94,6 @@ import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.math.abs
 import top.wkbin.taixu.ui.components.RuntimeCircularProgressIndicator as CircularProgressIndicator
-import top.wkbin.taixu.ui.components.RuntimeIcon
-import top.wkbin.taixu.ui.components.RuntimeIconName
-import top.wkbin.taixu.ui.components.SyntaxHighlighter
 import android.util.Log
 import java.io.File
 
@@ -542,10 +542,12 @@ private fun RemoteMediaBlock(block: MdRemoteMedia, cacheKey: String? = null) {
     var loaded by remember(cacheKey, block.url) { mutableStateOf(false) }
     var failed by remember(cacheKey, block.url) { mutableStateOf(false) }
     var aspectRatio by remember(cacheKey, block.url) { mutableFloatStateOf(0f) }
-    val shape = RoundedCornerShape(14.dp)
+    val chengming = LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS
+    val shape = RoundedCornerShape(if (chengming) 10.dp else 14.dp)
+    val maxWidth = if (chengming) 190.dp else MEDIA_MAX_WIDTH
+    val maxHeight = if (chengming) 240.dp else MEDIA_MAX_HEIGHT
     val density = LocalDensity.current
-    val decodeWidthPx = with(density) { MEDIA_MAX_WIDTH.roundToPx() }
-    val decodeHeightPx = with(density) { MEDIA_MAX_HEIGHT.roundToPx() }
+    val (decodeWidthPx, decodeHeightPx) = with(density) { maxWidth.roundToPx() to maxHeight.roundToPx() }
 
     val hostRoots = LocalSandboxHostRoots.current
     val dataModel: Any = remember(block.url, hostRoots) {
@@ -561,30 +563,19 @@ private fun RemoteMediaBlock(block: MdRemoteMedia, cacheKey: String? = null) {
             .data(dataModel)
             .size(decodeWidthPx, decodeHeightPx)
             .apply { if (cacheKey != null) memoryCacheKey(cacheKey) }
-            // 列表内关闭 crossfade：淡入会给每张图片产生一个动画帧，
-            // 快速滑动时多张图同时切 loaded 状态会叠加成可见掉帧。全屏预览仍保留淡入。
             .build()
     }
-    val imageWidth: androidx.compose.ui.unit.Dp
-    val imageHeight: androidx.compose.ui.unit.Dp
-    if (aspectRatio > 0f) {
-        imageWidth = minOf(MEDIA_MAX_WIDTH, MEDIA_MAX_HEIGHT * aspectRatio)
-        imageHeight = imageWidth / aspectRatio
+    val (imageWidth, imageHeight) = if (aspectRatio > 0f) {
+        val w = minOf(maxWidth, maxHeight * aspectRatio)
+        w to (w / aspectRatio)
     } else {
-        // 占位高度按「常见横图 4:3」估算，而非固定 180dp：
-        // 旧写法给的是与真实比例无关的常数高度，图片加载完成回填 aspectRatio 后，
-        // item 高度会从占位值突变到真实值 → LazyColumn 在滚动中反复重测量/位置修正。
-        // 按比例占位把跳变幅度压到最小（多数图片接近该比例），显著减轻滚动抖动。
-        imageWidth = MEDIA_MAX_WIDTH
-        imageHeight = imageWidth / MEDIA_PLACEHOLDER_ASPECT
+        maxWidth to (maxWidth / MEDIA_PLACEHOLDER_ASPECT)
     }
 
-    // AsyncImage avoids SubcomposeAsyncImage's per-item subcomposition overhead in the LazyColumn.
     Box(
-        modifier = Modifier
-            .size(imageWidth, imageHeight)
-            .clip(shape)
+        modifier = Modifier.size(imageWidth, imageHeight).clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .then(if (chengming) Modifier.border(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f), shape) else Modifier)
             .then(if (loaded) Modifier.clickable { previewing = true } else Modifier),
         contentAlignment = Alignment.Center,
     ) {

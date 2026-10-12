@@ -1,5 +1,4 @@
 package top.wkbin.taixu.ui.workspace
-
 import org.koin.compose.viewmodel.koinViewModel
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -22,8 +21,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import top.wkbin.taixu.ui.components.RuntimeDropdownMenu as DropdownMenu
+import top.wkbin.taixu.ui.components.RuntimeDropdownMenuItem as DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -57,14 +56,16 @@ import top.wkbin.taixu.ui.components.RuntimeIconName
 import top.wkbin.taixu.ui.components.RuntimeIconButton as IconButton
 import top.wkbin.taixu.ui.components.RuntimeAlertDialog
 import top.wkbin.taixu.ui.components.RuntimeTopBar
+import top.wkbin.taixu.ui.components.rememberRuntimeTopBarScrollState
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import top.wkbin.taixu.ui.components.RuntimeTextButton as TextButton
 import top.wkbin.taixu.ui.components.SectionHeader
 import top.wkbin.taixu.ui.components.SpotlightGuideOverlay
 import top.wkbin.taixu.ui.components.liquidGlassContent
 import top.wkbin.taixu.ui.components.rememberSpotlightAnchor
 import top.wkbin.taixu.ui.components.spotlightAnchor
-import top.wkbin.taixu.ui.theme.LocalLiquidGlassBackdrop
-
+import top.wkbin.taixu.ui.theme.LocalThemeStyle
+import top.wkbin.taixu.ui.theme.ThemeStyle
 /**
  * 太墟 · 工坊空间 (Workspace Space)
  * 管理 Linux 隔离工作区、代码工程与文件项目。
@@ -97,14 +98,12 @@ fun WorkspaceScreen(
     val templateScriptPreview by viewModel.templateScriptPreview.collectAsStateWithLifecycle()
     val firstUseGuidesShown by viewModel.firstUseGuidesShown.collectAsStateWithLifecycle()
     val context = LocalContext.current
-
     // 弹窗开关用 rememberSaveable，旋转后不丢失向导进度（S3）
     var showCreate by rememberSaveable { mutableStateOf(false) }
     var showImport by rememberSaveable { mutableStateOf(false) }
     var showTemplateManager by rememberSaveable { mutableStateOf(false) }
     var showTemplateSpec by rememberSaveable { mutableStateOf(false) }
     var actionsExpanded by rememberSaveable { mutableStateOf(false) }
-
     // 向导状态屏幕级持有：字段全部 rememberSaveable，与拆分前语义一致
     val createWizard = rememberCreateProjectWizardState()
     val importWizard = rememberImportProjectWizardState()
@@ -173,14 +172,15 @@ fun WorkspaceScreen(
 
     // 首次进入引导：高亮右上角「更多」菜单（内含插件中心与工坊设置入口）
     val moreAnchor = rememberSpotlightAnchor()
-    val glassBackdrop = LocalLiquidGlassBackdrop.current
+    val chengming = LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS
+    val topBarScroll = rememberRuntimeTopBarScrollState()
     // 引导遮罩与 Scaffold 放在同一 Box 下（同层兄弟节点），保证聚光灯坐标与按钮 boundsInRoot 同一参照系
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 RuntimeTopBar(
-                    title = stringResource(R.string.workspace_title),
+                    largeTitle = true, scrollState = topBarScroll,                    title = stringResource(R.string.workspace_title),
                     statusText = stringResource(R.string.workspace_active_projects, projects.size),
                 ) {
                     Box {
@@ -204,7 +204,7 @@ fun WorkspaceScreen(
                 }
             },
             bottomBar = {
-                if (glassBackdrop == null) {
+                if (!chengming) {
                     RuntimeBottomBar(MainDestination.Workspace, onNavigate)
                 }
             },
@@ -212,9 +212,9 @@ fun WorkspaceScreen(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .liquidGlassContent()
+                    .liquidGlassContent().nestedScroll(topBarScroll.nestedScrollConnection)
                     .padding(top = padding.calculateTopPadding()),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 104.dp),
+                contentPadding = PaddingValues(start = if (chengming) 20.dp else 16.dp, end = if (chengming) 20.dp else 16.dp, top = 6.dp, bottom = 104.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 item {
@@ -240,7 +240,7 @@ fun WorkspaceScreen(
                     // 宿主外部存储快速访问入口
                     RuntimeCard(
                         modifier = Modifier.fillMaxWidth(),
-                        borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                        borderColor = if (chengming) androidx.compose.ui.graphics.Color.Transparent else MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
                         onClick = { onOpenExplorer("sdcard") },
                         contentPadding = PaddingValues(14.dp),
                     ) {

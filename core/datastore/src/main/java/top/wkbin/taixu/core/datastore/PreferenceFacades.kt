@@ -10,6 +10,7 @@ import top.wkbin.taixu.core.model.RunningSendMode
 
 /** Narrow preference views keep consumers from depending on the complete settings schema. */
 class AppearancePreferences(private val store: SettingsDataStore) {
+    val accessibility = ChengmingAccessibilityPreferences(store)
     val themeMode get() = store.themeMode
     val themeStyle get() = store.themeStyle
     val dynamicColorEnabled get() = store.dynamicColorEnabled

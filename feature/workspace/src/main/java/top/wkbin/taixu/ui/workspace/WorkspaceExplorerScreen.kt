@@ -13,43 +13,32 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.minimumInteractiveComponentSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.ui.platform.LocalDensity
+import top.wkbin.taixu.ui.theme.LocalThemeStyle
+import top.wkbin.taixu.ui.theme.ThemeStyle
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import top.wkbin.taixu.ui.components.RuntimeButton as Button
 import top.wkbin.taixu.ui.components.RuntimeCircularProgressIndicator as CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import top.wkbin.taixu.ui.components.RuntimeDropdownMenu as DropdownMenu
+import top.wkbin.taixu.ui.components.RuntimeDropdownMenuItem as DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.minimumInteractiveComponentSize
 import top.wkbin.taixu.ui.components.RuntimeIconButton as IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
+import top.wkbin.taixu.ui.components.RuntimeOutlinedTextField as OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import top.wkbin.taixu.ui.components.RuntimeTextButton as TextButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -60,8 +49,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import top.wkbin.taixu.feature.workspace.R
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import top.wkbin.taixu.runtime.WorkspaceFileItem
 import top.wkbin.taixu.ui.components.EmptyPanel
@@ -70,8 +58,7 @@ import top.wkbin.taixu.ui.components.RuntimeIcon
 import top.wkbin.taixu.ui.components.RuntimeIconName
 import top.wkbin.taixu.ui.components.RuntimeTopBar
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 /**
  * 太墟 · 文件浏览器 (File Explorer)
@@ -267,6 +254,8 @@ fun WorkspaceExplorerScreen(
                 )
             } else {
                 Box(Modifier.fillMaxSize()) {
+                    val chengming = LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS
+                    val hairline = (1f / LocalDensity.current.density).dp
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                     ) {
@@ -274,11 +263,15 @@ fun WorkspaceExplorerScreen(
                         if (currentPath.isNotBlank()) {
                             item {
                                 ParentDirectoryRow(onClick = { viewModel.navigateUp() })
-                                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(start = if (chengming) 46.dp else 0.dp),
+                                    thickness = if (chengming) hairline else 1.dp,
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (chengming) 0.5f else 1f),
+                                )
                             }
                         }
 
-                        items(fileItems, key = { it.relativePath }) { item ->
+                        itemsIndexed(fileItems, key = { _, it -> it.relativePath }) { index, item ->
                             FileItemRow(
                                 item = item,
                                 onClick = {
@@ -297,7 +290,13 @@ fun WorkspaceExplorerScreen(
                                     deleteTarget = item
                                 },
                             )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f))
+                            if (index < fileItems.size - 1 || !chengming) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(start = if (chengming) 64.dp else 0.dp),
+                                    thickness = if (chengming) hairline else 1.dp,
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (chengming) 0.5f else 0.6f),
+                                )
+                            }
                         }
                     }
                     // 进入子目录时的覆盖式加载指示：列表非空但正在刷新

@@ -6,6 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import top.wkbin.taixu.feature.components.R
+import top.wkbin.taixu.ui.theme.LocalThemeStyle
+import top.wkbin.taixu.ui.theme.ThemeStyle
 
 enum class RuntimeIconName {
     Home, Workspace, Terminal, Settings, Back, ChevronRight, ChevronDown, ChevronUp, Package,
@@ -36,12 +38,17 @@ fun RuntimeIcon(
     modifier: Modifier = Modifier,
     tint: Color = Color.Unspecified,
 ) {
+    if (LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS) chengmingSymbol(name)?.let {
+        Icon(it, contentDescription = null, modifier = modifier, tint = if (tint == Color.Unspecified) LocalContentColor.current else tint)
+        return
+    }
     val resId = when (name) {
         RuntimeIconName.Home -> R.drawable.components_ic_home
         RuntimeIconName.Workspace -> R.drawable.components_ic_workspace
         RuntimeIconName.Terminal -> R.drawable.components_ic_terminal
         RuntimeIconName.Settings -> R.drawable.components_ic_settings
-        RuntimeIconName.Back -> R.drawable.components_ic_back
+        RuntimeIconName.Back -> if (LocalThemeStyle.current == ThemeStyle.LIQUID_GLASS)
+            R.drawable.components_ic_back_cupertino else R.drawable.components_ic_back
         RuntimeIconName.ChevronRight -> R.drawable.components_ic_chevronright
         RuntimeIconName.ChevronDown -> R.drawable.components_ic_chevrondown
         RuntimeIconName.ChevronUp -> R.drawable.components_ic_chevronup

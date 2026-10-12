@@ -8,27 +8,12 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.util.LruCache
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.add
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -38,10 +23,11 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import top.wkbin.taixu.ui.components.RuntimeButton as Button
 import androidx.compose.material3.ButtonDefaults
 import top.wkbin.taixu.ui.components.RuntimeCircularProgressIndicator as CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import top.wkbin.taixu.ui.components.RuntimeDropdownMenu as DropdownMenu
+import top.wkbin.taixu.ui.components.RuntimeDropdownMenuItem as DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import top.wkbin.taixu.ui.components.RuntimeIconButton as IconButton
+import top.wkbin.taixu.ui.components.isLiquidGlassThemeActive
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -145,15 +131,16 @@ internal fun UserBubble(
 
             // 🌟 2. 用户文字气泡
             if (message.text.isNotBlank()) {
+                val chengming = isLiquidGlassThemeActive()
                 Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    shape = RoundedCornerShape(16.dp, 4.dp, 16.dp, 16.dp),
+                    color = if (chengming) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primaryContainer,
+                    shape = if (chengming) RoundedCornerShape(18.dp, 18.dp, 4.dp, 18.dp) else RoundedCornerShape(16.dp, 4.dp, 16.dp, 16.dp),
                     modifier = Modifier
                         .widthIn(max = 560.dp)
                         .clickable { showMenu = true },
                 ) {
-                    val mentionColor = MaterialTheme.colorScheme.primary
-                    val mentionBg = MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
+                    val mentionColor = if (chengming) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary
+                    val mentionBg = if (chengming) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.22f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)
                     val annotatedText = remember(message.text, knownMentionNames, mentionColor, mentionBg) {
                         formatMentionText(message.text, knownMentionNames, mentionColor, mentionBg)
                     }
@@ -162,7 +149,7 @@ internal fun UserBubble(
                             text = annotatedText,
                             modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            color = if (chengming) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onPrimaryContainer,
                         )
                     }
                 }
@@ -353,7 +340,10 @@ internal fun ImageThumbnail(
     onClick: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
-    val thumbnailPx = with(LocalDensity.current) { 130.dp.roundToPx() }
+    val chengming = isLiquidGlassThemeActive()
+    val thumbnailSize = if (chengming) 104.dp else 130.dp
+    val thumbnailShape = RoundedCornerShape(if (chengming) 10.dp else 12.dp)
+    val thumbnailPx = with(LocalDensity.current) { thumbnailSize.roundToPx() }
     val request = remember(imageUrl, cacheKey, thumbnailPx) {
         val data: Any = when {
             imageUrl.startsWith("file://") -> File(imageUrl.removePrefix("file://"))
@@ -373,13 +363,13 @@ internal fun ImageThumbnail(
         contentDescription = stringResource(R.string.chat_user_image),
         contentScale = ContentScale.Crop,
         modifier = Modifier
-            .size(width = 130.dp, height = 130.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .size(thumbnailSize)
+            .clip(thumbnailShape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .border(
-                1.dp,
-                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
-                RoundedCornerShape(12.dp),
+                if (chengming) 0.5.dp else 1.dp,
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = if (chengming) 0.5f else 0.6f),
+                thumbnailShape,
             )
             // 与文字气泡一致的点击语义：弹出操作菜单
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),

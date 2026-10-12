@@ -1,7 +1,7 @@
 package top.wkbin.taixu.ui.chat
 
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ModalBottomSheet
+import top.wkbin.taixu.ui.components.RuntimeModalBottomSheet as ModalBottomSheet
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
